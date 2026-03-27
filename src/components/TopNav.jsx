@@ -1,6 +1,21 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 
 const TopNav = ({ title = "Dashboard", subtitle }) => {
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
+  const [showMenu, setShowMenu] = useState(false);
+
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  };
+
+  const initials = user?.name
+    ? user.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()
+    : 'U';
+
   return (
     <header className="fixed top-0 right-0 left-0 md:left-64 z-30 bg-surface/80 backdrop-blur-md">
       <div className="flex justify-between items-center h-16 px-8 w-full border-b border-outline-variant/10">
@@ -29,8 +44,30 @@ const TopNav = ({ title = "Dashboard", subtitle }) => {
             <span className="material-symbols-outlined">notifications</span>
             <span className="absolute top-2 right-2 w-2 h-2 bg-error rounded-full"></span>
           </button>
-          <div className="h-10 w-10 rounded-full overflow-hidden bg-surface-container-high ring-2 ring-primary-fixed flex items-center justify-center text-primary font-bold">
-            P
+
+          {/* User Avatar + Dropdown */}
+          <div className="relative">
+            <button
+              onClick={() => setShowMenu(!showMenu)}
+              className="h-10 w-10 rounded-full bg-primary text-on-primary font-bold flex items-center justify-center ring-2 ring-primary-fixed hover:ring-primary transition-all text-sm"
+            >
+              {initials}
+            </button>
+            {showMenu && (
+              <div className="absolute right-0 top-12 w-56 bg-surface-container-lowest rounded-2xl shadow-2xl border border-outline-variant/15 overflow-hidden z-50">
+                <div className="px-4 py-3 border-b border-outline-variant/15">
+                  <p className="font-bold text-on-surface text-sm truncate">{user?.name}</p>
+                  <p className="text-xs text-on-surface-variant truncate">{user?.email}</p>
+                </div>
+                <button
+                  onClick={handleLogout}
+                  className="w-full px-4 py-3 text-left text-sm font-semibold text-error hover:bg-error-container/20 transition-colors flex items-center gap-2"
+                >
+                  <span className="material-symbols-outlined text-lg">logout</span>
+                  Sair da conta
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </div>

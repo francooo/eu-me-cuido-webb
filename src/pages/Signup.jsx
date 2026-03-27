@@ -1,7 +1,36 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 
 const Signup = () => {
+  const { signup } = useAuth();
+  const navigate = useNavigate();
+  const [form, setForm] = useState({ name: '', email: '', password: '', confirm_password: '' });
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError('');
+    if (form.password !== form.confirm_password) {
+      return setError('As senhas não coincidem');
+    }
+    if (form.password.length < 6) {
+      return setError('A senha deve ter pelo menos 6 caracteres');
+    }
+    setLoading(true);
+    try {
+      await signup(form.name, form.email, form.password);
+      navigate('/dashboard');
+    } catch (err) {
+      setError(err.message || 'Erro ao criar conta');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="w-full max-w-[480px]">
       <div className="flex flex-col items-center mb-10">
@@ -19,7 +48,15 @@ const Signup = () => {
         </p>
       </div>
 
-      <form className="space-y-6">
+      {/* Error Alert */}
+      {error && (
+        <div className="mb-6 p-4 bg-error-container text-on-error-container rounded-xl text-sm font-medium flex items-center gap-3">
+          <span className="material-symbols-outlined text-lg flex-shrink-0">error</span>
+          {error}
+        </div>
+      )}
+
+      <form onSubmit={handleSubmit} className="space-y-6">
         <div className="space-y-5">
           <div className="space-y-2">
             <label htmlFor="full_name" className="block text-xs font-semibold text-on-surface-variant ml-1">Nome Completo</label>
@@ -28,8 +65,11 @@ const Signup = () => {
               <input
                 type="text"
                 id="full_name"
-                name="full_name"
+                name="name"
+                value={form.name}
+                onChange={handleChange}
                 placeholder="João Silva"
+                required
                 className="w-full pl-12 pr-4 py-3.5 bg-surface-container-highest border-none rounded-lg focus:ring-2 focus:ring-primary/40 text-on-surface placeholder:text-on-surface-variant/40 transition-all"
               />
             </div>
@@ -43,7 +83,10 @@ const Signup = () => {
                 type="email"
                 id="email"
                 name="email"
+                value={form.email}
+                onChange={handleChange}
                 placeholder="name@example.com"
+                required
                 className="w-full pl-12 pr-4 py-3.5 bg-surface-container-highest border-none rounded-lg focus:ring-2 focus:ring-primary/40 text-on-surface placeholder:text-on-surface-variant/40 transition-all"
               />
             </div>
@@ -57,7 +100,10 @@ const Signup = () => {
                 type="password"
                 id="password"
                 name="password"
+                value={form.password}
+                onChange={handleChange}
                 placeholder="••••••••"
+                required
                 className="w-full pl-12 pr-4 py-3.5 bg-surface-container-highest border-none rounded-lg focus:ring-2 focus:ring-primary/40 text-on-surface placeholder:text-on-surface-variant/40 transition-all"
               />
             </div>
@@ -71,7 +117,10 @@ const Signup = () => {
                 type="password"
                 id="confirm_password"
                 name="confirm_password"
+                value={form.confirm_password}
+                onChange={handleChange}
                 placeholder="••••••••"
+                required
                 className="w-full pl-12 pr-4 py-3.5 bg-surface-container-highest border-none rounded-lg focus:ring-2 focus:ring-primary/40 text-on-surface placeholder:text-on-surface-variant/40 transition-all"
               />
             </div>
@@ -79,9 +128,22 @@ const Signup = () => {
         </div>
 
         <div className="pt-4 space-y-6">
-          <button type="submit" className="w-full py-4 px-6 bg-gradient-to-r from-primary to-primary-container text-on-primary rounded-full font-semibold shadow-lg shadow-primary/20 hover:shadow-xl hover:scale-[1.01] active:scale-[0.98] transition-all duration-200 flex items-center justify-center gap-2">
-            Cadastrar
-            <span className="material-symbols-outlined text-lg">arrow_forward</span>
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full py-4 px-6 bg-gradient-to-r from-primary to-primary-container text-on-primary rounded-full font-semibold shadow-lg shadow-primary/20 hover:shadow-xl hover:scale-[1.01] active:scale-[0.98] transition-all duration-200 flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed disabled:scale-100"
+          >
+            {loading ? (
+              <>
+                <div className="w-5 h-5 border-2 border-white/40 border-t-white rounded-full animate-spin"></div>
+                Criando conta...
+              </>
+            ) : (
+              <>
+                Cadastrar
+                <span className="material-symbols-outlined text-lg">arrow_forward</span>
+              </>
+            )}
           </button>
 
           <div className="flex flex-col items-center gap-4">
@@ -89,11 +151,6 @@ const Signup = () => {
               Já tem uma conta?{' '}
               <Link to="/login" className="text-primary font-semibold hover:underline decoration-2 underline-offset-4 ml-1">Entrar</Link>
             </p>
-            <div className="flex items-center gap-2 text-[10px] text-on-surface-variant/60 uppercase tracking-widest font-medium">
-              <span className="w-8 h-[1px] bg-outline-variant/30"></span>
-              Verificação de Segurança Necessária
-              <span className="w-8 h-[1px] bg-outline-variant/30"></span>
-            </div>
           </div>
         </div>
       </form>
