@@ -6,6 +6,11 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 require('dotenv').config();
+const { Groq } = require('groq-sdk');
+
+const groq = new Groq({
+  apiKey: process.env.GROQ_API_KEY,
+});
 
 // Configuração do Multer para uploads de avatar
 const storage = multer.diskStorage({
@@ -311,18 +316,56 @@ app.post('/api/medications', authMiddleware, async (req, res) => {
 
 // PUT /api/medications/:id
 app.put('/api/medications/:id', authMiddleware, async (req, res) => {
-  const { name, dosage, frequency, stock_quantity, stock_total, icon } = req.body;
+  const medId = parseInt(req.params.id);
+  const { name, dosage, frequency, stock_quantity, stock_total, icon, scheduled_time, instructions } = req.body;
+  
+  console.log(`[PUT] Atualizando med ${medId}:`, { name, scheduled_time });
+
+  const client = await pool.connect();
   try {
-    const result = await pool.query(
-      `UPDATE medications SET name=$1, dosage=$2, frequency=$3, stock_quantity=$4,
-       stock_total=$5, icon=$6, type=$7 WHERE id=$8 AND user_id=$9 RETURNING *`,
-      [name, dosage, frequency, stock_quantity, stock_total, icon, icon, req.params.id, req.userId]
+    await client.query('BEGIN');
+    
+    // 1. Atualizar dados na tabela medications
+    const result = await client.query(
+      `UPDATE medications 
+       SET name=$1, dosage=$2, frequency=$3, stock_quantity=$4, stock_total=$5, icon=$6, type=$7 
+       WHERE id=$8 AND user_id=$9 RETURNING *`,
+      [name, dosage, frequency, stock_quantity, stock_total, icon, icon, medId, req.userId]
     );
-    if (result.rows.length === 0) return res.status(404).json({ error: 'Medicamento não encontrado' });
-    res.json(result.rows[0]);
+
+    if (result.rows.length === 0) {
+      await client.query('ROLLBACK');
+      return res.status(404).json({ error: 'Medicamento não encontrado' });
+    }
+
+    // 2. Gerenciar cronograma (Sincronização 1:1 para a UI atual)
+    // Primeiro removemos o cronograma antigo (se houver)
+    await client.query('DELETE FROM dose_schedules WHERE medication_id = $1', [medId]);
+    
+    // Se o usuário forneceu um horário, inserimos o novo
+    if (scheduled_time && scheduled_time.trim() !== '' && scheduled_time !== '--:--') {
+      await client.query(
+        'INSERT INTO dose_schedules (medication_id, scheduled_time, instructions) VALUES ($1, $2, $3)',
+        [medId, scheduled_time, instructions || '']
+      );
+      console.log(`  ✓ Cronograma atualizado para ${scheduled_time}`);
+    } else {
+      console.log('  ⚠ Cronograma ignorado ou limpo');
+    }
+
+    await client.query('COMMIT');
+    
+    // Retornamos o medicamento atualizado com o horário incluído para o front-end
+    const medResponse = result.rows[0];
+    medResponse.next_dose_time = (scheduled_time && scheduled_time !== '--:--') ? scheduled_time : null;
+    
+    res.json(medResponse);
   } catch (err) {
+    await client.query('ROLLBACK');
     console.error('Erro ao atualizar medicamento:', err);
-    res.status(500).json({ error: 'Erro ao atualizar dados' });
+    res.status(500).json({ error: 'Erro ao atualizar dados: ' + err.message });
+  } finally {
+    client.release();
   }
 });
 
@@ -538,6 +581,42 @@ app.post('/api/health-metrics', authMiddleware, async (req, res) => {
   } catch (err) {
     console.error('Erro ao salvar métrica:', err);
     res.status(500).json({ error: 'Erro ao salvar métrica' });
+  }
+});
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// AI INSIGHTS
+// ═══════════════════════════════════════════════════════════════════════════════
+
+// POST /api/ai/medication-summary
+app.post('/api/ai/medication-summary', authMiddleware, async (req, res) => {
+  const { name, dosage, frequency, instructions } = req.body;
+  if (!name) return res.status(400).json({ error: 'Nome do medicamento é obrigatório' });
+
+  try {
+    const chatCompletion = await groq.chat.completions.create({
+      messages: [
+        {
+          role: "system",
+          content: "Você é um assistente de saúde especializado e gentil da plataforma 'Eu me cuido'. Forneça um resumo conciso e amigável sobre o medicamento informado, incluindo: 1. Para que serve, 2. Como geralmente deve ser tomado, 3. Uma dica de cuidado importante. SEMPRE termine com um aviso de que este é um resumo informativo e que o paciente DEVE consultar um médico ou farmacêutico para orientações específicas e nunca se automedicar. Responda em Português do Brasil no formato Markdown, use emojis discretos para ser amigável."
+        },
+        {
+          role: "user",
+          content: `Medicamento: ${name}\nDosagem: ${dosage || 'Não informada'}\nFrequência: ${frequency || 'Não informada'}\nInstruções Adicionais: ${instructions || 'Nenhuma'}`
+        }
+      ],
+      model: "llama-3.3-70b-versatile",
+      temperature: 0.5,
+      max_tokens: 500,
+      top_p: 1,
+      stream: false,
+    });
+
+    const summary = chatCompletion.choices[0].message.content;
+    res.json({ summary });
+  } catch (err) {
+    console.error('Erro na AI do Groq:', err);
+    res.status(500).json({ error: 'Falha ao gerar resumo da IA', detail: err.message });
   }
 });
 

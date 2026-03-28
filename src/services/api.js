@@ -92,3 +92,8 @@ export const healthMetricsApi = {
   },
   update: (body) => request('/health-metrics', { method: 'POST', body: JSON.stringify(body) }),
 };
+
+// ─── AI Insights ──────────────────────────────────────────────────────────────
+export const aiApi = {
+  getMedicationSummary: (body) => request('/ai/medication-summary', { method: 'POST', body: JSON.stringify(body) }),
+};

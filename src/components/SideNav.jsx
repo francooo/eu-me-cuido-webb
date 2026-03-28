@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { familyApi } from '../services/api';
 import { useAuth } from '../context/AuthContext';
@@ -7,11 +7,36 @@ const SideNav = ({ isOpen, setIsOpen }) => {
   const { user, selectedMember, setSelectedMember, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const scrollRef = useRef(null);
+  
   const [familyMembers, setFamilyMembers] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [preview, setPreview] = useState(null);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(false);
+
+  const checkScroll = () => {
+    if (scrollRef.current) {
+      const { scrollLeft, scrollWidth, clientWidth } = scrollRef.current;
+      setCanScrollLeft(scrollLeft > 0);
+      setCanScrollRight(scrollLeft < scrollWidth - clientWidth - 5);
+    }
+  };
+
+  const scrollFamily = (direction) => {
+    if (scrollRef.current) {
+      const amount = direction === 'left' ? -150 : 150;
+      scrollRef.current.scrollBy({ left: amount, behavior: 'smooth' });
+    }
+  };
+
+  useEffect(() => {
+    checkScroll();
+    window.addEventListener('resize', checkScroll);
+    return () => window.removeEventListener('resize', checkScroll);
+  }, [familyMembers]);
 
   const [form, setForm] = useState({
     name: '',
@@ -103,50 +128,76 @@ const SideNav = ({ isOpen, setIsOpen }) => {
         </div>
 
         {/* Global Profile Switcher */}
-        <div className="px-8 mb-8 overflow-hidden">
+        <div className="px-8 mb-8 relative group/switcher">
           <p className="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest opacity-50 mb-4">Sua Rede de Cuidado</p>
-          <div className="flex items-center gap-4 overflow-x-auto pb-4 custom-scrollbar">
-            {familyMembers.map((m) => {
-              const isActive = selectedMember?.id === m.id;
-              return (
-                <button 
-                  key={m.id} 
-                  title={m.name} 
-                  onClick={() => handleSelectMember(m)}
-                  className="relative group shrink-0 flex-none"
-                >
-                  <div className={`
-                    w-16 h-16 rounded-full border-2 transition-all duration-500 flex items-center justify-center p-1
-                    ${isActive ? 'border-primary bg-primary/5 shadow-lg shadow-primary/10' : 'border-transparent bg-surface-container-high'}
-                  `}>
-                    <div className="w-full h-full rounded-full overflow-hidden flex items-center justify-center bg-surface-container-low shadow-inner">
-                      {m.avatar_url ? (
-                        <img src={m.avatar_url} alt={m.name} className="w-full h-full object-cover" />
-                      ) : (
-                        <span className="material-symbols-outlined text-on-surface-variant text-2xl">person</span>
-                      )}
-                    </div>
-                  </div>
-                  
-                  {m.is_self && !isActive && (
-                    <span className="absolute bottom-0 -right-0.5 w-4 h-4 bg-primary rounded-full border-2 border-surface-container-low shadow-sm z-10 transition-transform group-hover:scale-110"></span>
-                  )}
-                  
-                  {isActive && (
-                    <div className="absolute -top-1 -right-1 w-6 h-6 bg-primary text-on-primary rounded-full flex items-center justify-center shadow-xl ring-2 ring-surface z-20 animate-in zoom-in-50 duration-300">
-                      <span className="material-symbols-outlined text-[14px] font-black">check</span>
-                    </div>
-                  )}
-                </button>
-              );
-            })}
+          
+          <div className="relative">
+            {/* Scroll Arrows */}
+            {canScrollLeft && (
+              <button 
+                onClick={() => scrollFamily('left')}
+                className="absolute left-[-12px] top-1/2 -translate-y-1/2 z-30 w-8 h-8 rounded-full bg-white/90 backdrop-blur-md shadow-lg border border-outline-variant/20 flex items-center justify-center text-primary hover:scale-110 active:scale-90 transition-all"
+              >
+                <span className="material-symbols-outlined text-lg">chevron_left</span>
+              </button>
+            )}
+            
+            {canScrollRight && (
+              <button 
+                onClick={() => scrollFamily('right')}
+                className="absolute right-[-12px] top-1/2 -translate-y-1/2 z-30 w-8 h-8 rounded-full bg-white/90 backdrop-blur-md shadow-lg border border-outline-variant/20 flex items-center justify-center text-primary hover:scale-110 active:scale-90 transition-all"
+              >
+                <span className="material-symbols-outlined text-lg">chevron_right</span>
+              </button>
+            )}
 
-            <button
-              onClick={() => { setShowModal(true); setError(''); }}
-              className="w-16 h-16 shrink-0 flex-none rounded-full bg-surface-container-high border-2 border-dashed border-outline-variant flex items-center justify-center text-on-surface-variant hover:bg-surface-container-highest hover:border-primary hover:text-primary transition-all active:scale-90"
+            <div 
+              ref={scrollRef}
+              onScroll={checkScroll}
+              className="flex items-center gap-4 overflow-x-auto pb-4 custom-scrollbar scroll-smooth"
             >
-              <span className="material-symbols-outlined text-xl">add</span>
-            </button>
+              {familyMembers.map((m) => {
+                const isActive = selectedMember?.id === m.id;
+                return (
+                  <button 
+                    key={m.id} 
+                    title={m.name} 
+                    onClick={() => handleSelectMember(m)}
+                    className="relative group shrink-0 flex-none"
+                  >
+                    <div className={`
+                      w-16 h-16 rounded-full border-2 transition-all duration-500 flex items-center justify-center p-1
+                      ${isActive ? 'border-primary bg-primary/5 shadow-lg shadow-primary/10' : 'border-transparent bg-surface-container-high'}
+                    `}>
+                      <div className="w-full h-full rounded-full overflow-hidden flex items-center justify-center bg-surface-container-low shadow-inner">
+                        {m.avatar_url ? (
+                          <img src={m.avatar_url} alt={m.name} className="w-full h-full object-cover" />
+                        ) : (
+                          <span className="material-symbols-outlined text-on-surface-variant text-2xl">person</span>
+                        )}
+                      </div>
+                    </div>
+                    
+                    {m.is_self && !isActive && (
+                      <span className="absolute bottom-0 -right-0.5 w-4 h-4 bg-primary rounded-full border-2 border-surface-container-low shadow-sm z-10 transition-transform group-hover:scale-110"></span>
+                    )}
+                    
+                    {isActive && (
+                      <div className="absolute -top-1 -right-1 w-6 h-6 bg-primary text-on-primary rounded-full flex items-center justify-center shadow-xl ring-2 ring-surface z-20 animate-in zoom-in-50 duration-300">
+                        <span className="material-symbols-outlined text-[14px] font-black">check</span>
+                      </div>
+                    )}
+                  </button>
+                );
+              })}
+
+              <button
+                onClick={() => { setShowModal(true); setError(''); }}
+                className="w-16 h-16 shrink-0 flex-none rounded-full bg-surface-container-high border-2 border-dashed border-outline-variant flex items-center justify-center text-on-surface-variant hover:bg-surface-container-highest hover:border-primary hover:text-primary transition-all active:scale-90"
+              >
+                <span className="material-symbols-outlined text-xl">add</span>
+              </button>
+            </div>
           </div>
         </div>
 

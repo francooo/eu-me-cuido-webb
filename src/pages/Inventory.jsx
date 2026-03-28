@@ -1,6 +1,52 @@
 import React, { useState, useEffect } from 'react';
-import { medicationsApi, familyApi } from '../services/api';
+import { medicationsApi, familyApi, aiApi } from '../services/api';
 import { useAuth } from '../context/AuthContext';
+
+// Modal de Insights da IA
+const AiInsightsModal = ({ isOpen, onClose, summary, medName, loading }) => {
+  if (!isOpen) return null;
+  return (
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-md flex items-center justify-center z-[100] p-4 animate-in fade-in duration-300">
+      <div className="bg-surface-container-lowest rounded-[2.5rem] shadow-2xl w-full max-w-lg p-8 sm:p-10 border border-primary/20 flex flex-col gap-6 scale-95 animate-in zoom-in-95 duration-200">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary shadow-inner">
+              <span className="material-symbols-outlined text-3xl">smart_toy</span>
+            </div>
+            <div>
+              <h3 className="text-2xl font-black text-on-surface tracking-tighter">AI Insight</h3>
+              <p className="text-[11px] uppercase font-bold text-primary tracking-widest mt-1">{medName}</p>
+            </div>
+          </div>
+          <button onClick={onClose} className="w-10 h-10 rounded-full flex items-center justify-center hover:bg-surface-container-high transition-all text-on-surface-variant">
+            <span className="material-symbols-outlined text-2xl">close</span>
+          </button>
+        </div>
+
+        <div className="bg-primary/5 rounded-3xl p-6 border border-primary/10 min-h-[200px] flex flex-col">
+          {loading ? (
+            <div className="flex-1 flex flex-col items-center justify-center gap-4 py-10">
+              <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+              <p className="text-primary font-bold text-sm animate-pulse tracking-wide">Analisando medicamento...</p>
+            </div>
+          ) : (
+            <div className="prose prose-sm prose-primary max-w-none prose-p:text-on-surface-variant prose-p:leading-relaxed prose-headings:text-on-surface prose-headings:font-black">
+              <div className="text-on-surface-variant whitespace-pre-line leading-relaxed text-sm font-medium">
+                {summary}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {!loading && (
+          <button onClick={onClose} className="w-full py-4 rounded-2xl bg-primary text-on-primary text-[13px] font-black uppercase tracking-widest shadow-xl shadow-primary/20 hover:shadow-2xl hover:-translate-y-0.5 transition-all active:scale-95">
+            Entendido
+          </button>
+        )}
+      </div>
+    </div>
+  );
+};
 
 const ICONS = ['pill', 'vaccines', 'medication'];
 
@@ -19,6 +65,29 @@ const Inventory = () => {
     family_member_id: ''
   });
   const [saving, setSaving] = useState(false);
+  const [aiInsight, setAiInsight] = useState('');
+  const [aiLoading, setAiLoading] = useState(false);
+  const [showAiModal, setShowAiModal] = useState(false);
+  const [currentMedName, setCurrentMedName] = useState('');
+
+  const handleAiSummary = async (med) => {
+    setCurrentMedName(med.name);
+    setShowAiModal(true);
+    setAiLoading(true);
+    try {
+      const { summary } = await aiApi.getMedicationSummary({
+        name: med.name,
+        dosage: med.dosage,
+        frequency: med.frequency,
+        instructions: med.instructions
+      });
+      setAiInsight(summary);
+    } catch (err) {
+      setAiInsight('❌ Não foi possível gerar o resumo agora. Tente novamente mais tarde.');
+    } finally {
+      setAiLoading(false);
+    }
+  };
 
   const loadData = async () => {
     try {
@@ -194,6 +263,13 @@ const Inventory = () => {
                 </div>
               </div>
               <div className="flex items-center gap-2">
+                <button 
+                  onClick={() => handleAiSummary(med)}
+                  title="Resumo da IA"
+                  className="p-2.5 bg-primary/5 text-primary rounded-xl hover:bg-primary/10 transition-all group"
+                >
+                  <span className="material-symbols-outlined text-xl group-hover:scale-110 transition-transform">smart_toy</span>
+                </button>
                 <button onClick={() => openModal(med)} className="p-2 text-outline hover:text-primary transition-colors"><span className="material-symbols-outlined">edit</span></button>
                 <button onClick={() => handleDelete(med.id)} className="p-2 text-outline hover:text-error transition-colors"><span className="material-symbols-outlined">delete</span></button>
               </div>
@@ -201,6 +277,15 @@ const Inventory = () => {
           );
         })}
       </div>
+
+      {/* AI Insights Modal */}
+      <AiInsightsModal 
+        isOpen={showAiModal} 
+        onClose={() => setShowAiModal(false)} 
+        summary={aiInsight} 
+        medName={currentMedName} 
+        loading={aiLoading} 
+      />
 
       {/* Modal de Adicionar/Editar */}
       {showModal && (
@@ -259,6 +344,13 @@ const Inventory = () => {
                     <option value="vaccines">Injeção/Cápsula</option>
                     <option value="medication">Medicamento</option>
                   </select>
+                </div>
+                <div className="col-span-2">
+                  <label className="text-xs font-semibold text-on-surface-variant mb-1 block">Instruções de Uso (Ex: Tomar em jejum)</label>
+                  <textarea value={form.instructions} onChange={e => setForm({ ...form, instructions: e.target.value })}
+                    placeholder="Ex: Não mastigar, tomar com bastante água..."
+                    rows="2"
+                    className="w-full bg-surface-container-highest border-none rounded-xl px-4 py-3 text-on-surface focus:ring-2 focus:ring-primary/40 outline-none resize-none" />
                 </div>
                 {familyMembers.length > 1 && (
                   <div className="col-span-2">
