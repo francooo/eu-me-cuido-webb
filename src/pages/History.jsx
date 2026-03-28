@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { doseLogsApi } from '../services/api';
+import { useAuth } from '../context/AuthContext';
 
 const statusConfig = {
   taken: { label: 'No horário', bg: 'bg-primary-fixed/30', text: 'text-primary', icon: 'check_circle', iconBg: 'bg-primary/10 text-primary' },
@@ -17,20 +18,29 @@ function groupByDate(logs) {
 }
 
 const History = () => {
+  const { user, selectedMember } = useAuth();
   const [logs, setLogs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [days, setDays] = useState(7);
 
-  const loadLogs = (d) => {
-    setLoading(true);
-    doseLogsApi.list(d)
-      .then(setLogs)
-      .catch(err => setError(err.message))
-      .finally(() => setLoading(false));
+  const loadLogs = async (d) => {
+    try {
+      setLoading(true);
+      const params = { days: d };
+      if (selectedMember) params.family_member_id = selectedMember.id;
+      const data = await doseLogsApi.list(params);
+      setLogs(data);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  useEffect(() => { loadLogs(days); }, [days]);
+  useEffect(() => { 
+    if (user) loadLogs(days); 
+  }, [user, days, selectedMember]);
 
   const totalTaken = logs.filter(l => l.status === 'taken').length;
   const totalMissed = logs.filter(l => l.status === 'missed').length;

@@ -2,7 +2,7 @@
 const BASE_URL = '/api';
 
 function getToken() {
-  return localStorage.getItem('emc_token');
+  return localStorage.getItem('auth_token');
 }
 
 async function request(path, options = {}) {
@@ -18,6 +18,14 @@ async function request(path, options = {}) {
     ...options,
     headers,
   });
+
+  if (res.status === 401 || res.status === 403) {
+    localStorage.removeItem('auth_token');
+    if (!window.location.pathname.includes('/login')) {
+      window.location.href = '/login';
+    }
+  }
+
   const data = await res.json().catch(() => ({}));
 
   if (!res.ok) {
@@ -53,16 +61,34 @@ export const familyApi = {
 
 // ─── Dose Schedules ───────────────────────────────────────────────────────────
 export const schedulesApi = {
-  list: () => request('/dose-schedules'),
+  list: (params = {}) => {
+    const qs = new URLSearchParams(params).toString();
+    return request(`/dose-schedules${qs ? `?${qs}` : ''}`);
+  },
 };
 
 // ─── Dose Logs ────────────────────────────────────────────────────────────────
 export const doseLogsApi = {
-  list: (days = 7) => request(`/dose-logs?days=${days}`),
+  list: (params = {}) => {
+    const qs = new URLSearchParams(params).toString();
+    return request(`/dose-logs${qs ? `?${qs}` : ''}`);
+  },
   create: (body) => request('/dose-logs', { method: 'POST', body: JSON.stringify(body) }),
 };
 
 // ─── Dashboard ────────────────────────────────────────────────────────────────
 export const dashboardApi = {
-  get: () => request('/dashboard'),
+  get: (params = {}) => {
+    const qs = new URLSearchParams(params).toString();
+    return request(`/dashboard${qs ? `?${qs}` : ''}`);
+  },
+};
+
+// ─── Health Metrics ───────────────────────────────────────────────────────────
+export const healthMetricsApi = {
+  list: (params = {}) => {
+    const qs = new URLSearchParams(params).toString();
+    return request(`/health-metrics${qs ? `?${qs}` : ''}`);
+  },
+  update: (body) => request('/health-metrics', { method: 'POST', body: JSON.stringify(body) }),
 };

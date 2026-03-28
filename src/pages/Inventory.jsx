@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { medicationsApi, familyApi } from '../services/api';
+import { useAuth } from '../context/AuthContext';
 
 const ICONS = ['pill', 'vaccines', 'medication'];
 
 const Inventory = () => {
+  const { user, selectedMember: globalMember } = useAuth();
   const [medications, setMedications] = useState([]);
   const [familyMembers, setFamilyMembers] = useState([]);
-  const [selectedMember, setSelectedMember] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [showModal, setShowModal] = useState(false);
@@ -21,8 +22,9 @@ const Inventory = () => {
 
   const loadData = async () => {
     try {
+      const params = globalMember ? { family_member_id: globalMember.id } : {};
       const [meds, family] = await Promise.all([
-        medicationsApi.list(selectedMember ? { family_member_id: selectedMember } : {}),
+        medicationsApi.list(params),
         familyApi.list(),
       ]);
       setMedications(meds);
@@ -34,14 +36,11 @@ const Inventory = () => {
     }
   };
 
-  useEffect(() => { loadData(); }, [selectedMember]);
+  useEffect(() => { 
+    if (user) loadData(); 
+  }, [user, globalMember]);
 
   const openModal = (med = null) => {
-    if (familyMembers.length === 0) {
-      alert('Você precisa cadastrar pelo menos um membro da família (ou seu próprio perfil) antes de adicionar medicamentos.');
-      return;
-    }
-
     if (med) {
       setForm({
         name: med.name, dosage: med.dosage || '',
@@ -54,7 +53,7 @@ const Inventory = () => {
     } else {
       setForm({ 
         name: '', dosage: '', frequency: 'daily', stock_quantity: 30, stock_total: 30, icon: 'pill', scheduled_time: '', instructions: '', 
-        family_member_id: familyMembers[0]?.id || '' 
+        family_member_id: globalMember?.id || familyMembers[0]?.id || '' 
       });
       setEditMed(null);
     }
@@ -104,25 +103,17 @@ const Inventory = () => {
 
   return (
     <>
-      {/* Family Member Switcher */}
-      <div className="mb-10 flex flex-col gap-4">
-        <div className="flex items-center justify-between">
-          <span className="text-xs font-bold uppercase tracking-widest text-outline">Gerenciar Membros da Família</span>
-          <button onClick={() => openModal()} className="text-primary text-xs font-bold flex items-center gap-1 hover:underline">
-            <span className="material-symbols-outlined text-sm">add</span> Adicionar Medicamento
-          </button>
+      <div className="flex items-center justify-between mb-8">
+        <div>
+          <h2 className="text-3xl font-black text-on-surface tracking-tighter">Inventário</h2>
+          <p className="text-xs font-bold text-on-surface-variant uppercase tracking-[0.2em] opacity-50 mt-1">
+            {globalMember ? `Medicamentos de ${globalMember.name}` : 'Todos os medicamentos'}
+          </p>
         </div>
-        <div className="flex items-center gap-4 overflow-x-auto pb-2 scrollbar-hide">
-          {familyMembers.map((m) => (
-            <button key={m.id} onClick={() => setSelectedMember(selectedMember === m.id ? null : m.id)}
-              className={`flex flex-col items-center gap-2 group min-w-[80px] transition-opacity ${selectedMember && selectedMember !== m.id ? 'opacity-60 hover:opacity-100' : ''}`}>
-              <div className={`w-14 h-14 rounded-full p-1 bg-white transition-all flex items-center justify-center bg-surface-container-high ${selectedMember === m.id || !selectedMember && m.is_self ? 'ring-2 ring-primary text-primary' : 'ring-0 group-hover:ring-2 ring-outline-variant'}`}>
-                <span className="material-symbols-outlined">person</span>
-              </div>
-              <span className={`text-xs font-${selectedMember === m.id ? 'bold text-primary' : 'medium text-on-surface-variant'}`}>{m.name}{m.is_self ? ' (Eu)' : ''}</span>
-            </button>
-          ))}
-        </div>
+        <button onClick={() => openModal()} className="px-6 py-3.5 bg-primary text-on-primary rounded-2xl font-black text-[11px] uppercase tracking-widest shadow-xl shadow-primary/20 hover:shadow-2xl hover:-translate-y-0.5 transition-all active:scale-95 flex items-center gap-2">
+          <span className="material-symbols-outlined text-lg">add</span>
+          Novo Medicamento
+        </button>
       </div>
 
       {/* Summary Stats */}

@@ -21,7 +21,7 @@ const migrations = [
   `ALTER TABLE family_members ADD COLUMN IF NOT EXISTS gender VARCHAR(50)`,
   `ALTER TABLE family_members ADD COLUMN IF NOT EXISTS avatar_url TEXT`,
   `ALTER TABLE family_members ADD COLUMN IF NOT EXISTS is_self BOOLEAN DEFAULT FALSE`,
-  `ALTER TABLE family_members ADD COLUMN IF NOT EXISTS relationship VARCHAR(100)`,
+  `ALTER TABLE family_members ADD COLUMN IF NOT EXISTS relation VARCHAR(100)`,
   // Criar nossas tabelas específicas se não existirem
   `CREATE TABLE IF NOT EXISTS dose_schedules (
     id SERIAL PRIMARY KEY,

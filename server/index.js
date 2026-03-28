@@ -21,7 +21,7 @@ const storage = multer.diskStorage({
 });
 const upload = multer({
   storage,
-  limits: { fileSize: 2 * 1024 * 1024 }, // 2MB
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
   fileFilter: (req, file, cb) => {
     const allowed = /jpeg|jpg|png/;
     const ext = allowed.test(path.extname(file.originalname).toLowerCase());
@@ -111,17 +111,18 @@ app.post('/api/auth/signup', async (req, res) => {
     // Criar membro da família "self" automático
     try {
       await pool.query(
-        'INSERT INTO family_members (user_id, name, relationship, is_self) VALUES ($1, $2, $3, TRUE)',
-        [user.id, name, 'Eu']
+        'INSERT INTO family_members (user_id, name, relation, relationship, is_self, created_at, created_by_user_id, family_id, is_active) VALUES ($1, $2, $3, $4, TRUE, NOW(), $1, $1, TRUE)',
+        [user.id, name, 'Eu', 'Eu']
       );
-    } catch {
-      // family_members pode ter estrutura diferente, ignorar erro
+    } catch (err) {
+      console.error('Falha ao criar self-member:', err.message);
     }
 
     const token = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: '7d' });
-    res.status(201).json({ token, user });
+    res.status(201).json({ token, user: { id: user.id, name: user.name, email: user.email } });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('Erro no signup:', err);
+    res.status(500).json({ error: 'Erro ao criar usuário', detail: err.message });
   }
 });
 
@@ -146,7 +147,8 @@ app.post('/api/auth/login', async (req, res) => {
     const token = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: '7d' });
     res.json({ token, user: { id: user.id, name: user.name || user.first_name, email: user.email } });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('Erro no login:', err);
+    res.status(500).json({ error: 'Erro ao autenticar' });
   }
 });
 
@@ -157,7 +159,8 @@ app.get('/api/auth/me', authMiddleware, async (req, res) => {
     if (result.rows.length === 0) return res.status(404).json({ error: 'Usuário não encontrado' });
     res.json(result.rows[0]);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('Erro em /auth/me:', err);
+    res.status(500).json({ error: 'Erro ao buscar dados do usuário' });
   }
 });
 
@@ -174,26 +177,53 @@ app.get('/api/family-members', authMiddleware, async (req, res) => {
     );
     res.json(result.rows);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('Erro ao listar família:', err);
+    res.status(500).json({ error: 'Erro ao buscar membros da família' });
   }
 });
 
 // POST /api/family-members
-app.post('/api/family-members', authMiddleware, upload.single('avatar'), async (req, res) => {
-  const { name, relationship, birth_date, gender } = req.body;
+app.post('/api/family-members', authMiddleware, (req, res, next) => {
+  upload.single('avatar')(req, res, (err) => {
+    if (err instanceof multer.MulterError) {
+      if (err.code === 'LIMIT_FILE_SIZE') {
+        return res.status(400).json({ error: 'A imagem deve ter no máximo 5MB' });
+      }
+      return res.status(400).json({ error: err.message });
+    } else if (err) {
+      return res.status(400).json({ error: err.message });
+    }
+    next();
+  });
+}, async (req, res) => {
+  const { name, relation, birth_date, gender } = req.body;
   if (!name) return res.status(400).json({ error: 'Nome é obrigatório' });
+
+  // Normalizar birth_date (DD/MM/YYYY para YYYY-MM-DD se necessário)
+  let normalizedDate = birth_date || null;
+  if (normalizedDate && normalizedDate.includes('/')) {
+    const [day, month, year] = normalizedDate.split('/');
+    normalizedDate = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+  }
 
   const avatar_url = req.file ? `/uploads/avatars/${req.file.filename}` : null;
 
   try {
     const result = await pool.query(
-      `INSERT INTO family_members (user_id, name, relationship, birth_date, gender, avatar_url)
-       VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`,
-      [req.userId, name, relationship || null, birth_date || null, gender || null, avatar_url]
+      `INSERT INTO family_members (
+        user_id, name, relation, relationship, birth_date, gender, avatar_url, 
+        created_at, created_by_user_id, family_id, is_active
+      )
+       VALUES ($1, $2, $3, $4, $5, $6, $7, NOW(), $1, 1, TRUE) RETURNING *`,
+      [req.userId, name, relation || 'Outro', relation || 'Outro', normalizedDate, gender || null, avatar_url]
     );
     res.status(201).json(result.rows[0]);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('Erro ao criar membro da família:', err);
+    res.status(500).json({ 
+      error: 'Erro ao criar membro',
+      detail: process.env.NODE_ENV === 'development' ? err.message : undefined
+    });
   }
 });
 
@@ -203,7 +233,8 @@ app.delete('/api/family-members/:id', authMiddleware, async (req, res) => {
     await pool.query('DELETE FROM family_members WHERE id = $1 AND user_id = $2', [req.params.id, req.userId]);
     res.json({ message: 'Membro removido' });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('Erro ao remover membro:', err);
+    res.status(500).json({ error: 'Erro ao remover membro' });
   }
 });
 
@@ -234,7 +265,8 @@ app.get('/api/medications', authMiddleware, async (req, res) => {
     const result = await pool.query(query, params);
     res.json(result.rows);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('Erro ao listar medicamentos:', err);
+    res.status(500).json({ error: 'Erro ao buscar medicamentos' });
   }
 });
 
@@ -270,7 +302,8 @@ app.post('/api/medications', authMiddleware, async (req, res) => {
     res.status(201).json(med);
   } catch (err) {
     await client.query('ROLLBACK');
-    res.status(500).json({ error: err.message });
+    console.error('Erro ao criar medicamento:', err);
+    res.status(500).json({ error: 'Erro ao cadastrar medicamento' });
   } finally {
     client.release();
   }
@@ -288,7 +321,8 @@ app.put('/api/medications/:id', authMiddleware, async (req, res) => {
     if (result.rows.length === 0) return res.status(404).json({ error: 'Medicamento não encontrado' });
     res.json(result.rows[0]);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('Erro ao atualizar medicamento:', err);
+    res.status(500).json({ error: 'Erro ao atualizar dados' });
   }
 });
 
@@ -298,7 +332,8 @@ app.delete('/api/medications/:id', authMiddleware, async (req, res) => {
     await pool.query('UPDATE medications SET active=FALSE WHERE id=$1 AND user_id=$2', [req.params.id, req.userId]);
     res.json({ message: 'Medicamento removido' });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('Erro ao remover medicamento:', err);
+    res.status(500).json({ error: 'Erro ao remover' });
   }
 });
 
@@ -309,14 +344,20 @@ app.delete('/api/medications/:id', authMiddleware, async (req, res) => {
 // GET /api/dose-schedules — agenda de hoje
 app.get('/api/dose-schedules', authMiddleware, async (req, res) => {
   try {
-    const result = await pool.query(
-      `SELECT ds.*, m.name as medication_name, m.dosage, m.icon
-       FROM dose_schedules ds
-       JOIN medications m ON ds.medication_id = m.id
-       WHERE m.user_id = $1 AND m.active = TRUE
-       ORDER BY ds.scheduled_time ASC`,
-      [req.userId]
-    );
+    const { family_member_id } = req.query;
+    let query = `
+      SELECT ds.*, m.name as medication_name, m.dosage, m.icon
+      FROM dose_schedules ds
+      JOIN medications m ON ds.medication_id = m.id
+      WHERE m.user_id = $1 AND m.active = TRUE
+    `;
+    const params = [req.userId];
+    if (family_member_id) {
+      query += ' AND m.family_member_id = $2';
+      params.push(family_member_id);
+    }
+    query += ' ORDER BY ds.scheduled_time ASC';
+    const result = await pool.query(query, params);
     res.json(result.rows);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -330,17 +371,21 @@ app.get('/api/dose-schedules', authMiddleware, async (req, res) => {
 // GET /api/dose-logs
 app.get('/api/dose-logs', authMiddleware, async (req, res) => {
   try {
-    const { days = 7 } = req.query;
-    const result = await pool.query(
-      `SELECT dl.*, m.name as medication_name, m.dosage, m.icon
-       FROM dose_logs dl
-       JOIN medications m ON dl.medication_id = m.id
-       WHERE m.user_id = $1
-         AND dl.scheduled_at >= NOW() - INTERVAL '${parseInt(days)} days'
-       ORDER BY dl.scheduled_at DESC
-       LIMIT 100`,
-      [req.userId]
-    );
+    const { days = 7, family_member_id } = req.query;
+    let query = `
+      SELECT dl.*, m.name as medication_name, m.dosage, m.icon
+      FROM dose_logs dl
+      JOIN medications m ON dl.medication_id = m.id
+      WHERE m.user_id = $1
+    `;
+    const params = [req.userId];
+    if (family_member_id) {
+      query += ' AND m.family_member_id = $2';
+      params.push(family_member_id);
+    }
+    query += ` AND dl.scheduled_at >= NOW() - INTERVAL '${parseInt(days)} days' ORDER BY dl.scheduled_at DESC LIMIT 100`;
+    
+    const result = await pool.query(query, params);
     res.json(result.rows);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -371,7 +416,8 @@ app.post('/api/dose-logs', authMiddleware, async (req, res) => {
 
     res.status(201).json(result.rows[0]);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('Erro ao registrar dose:', err);
+    res.status(500).json({ error: 'Erro ao salvar registro' });
   }
 });
 
@@ -382,31 +428,33 @@ app.post('/api/dose-logs', authMiddleware, async (req, res) => {
 // GET /api/dashboard — resumo para o dashboard
 app.get('/api/dashboard', authMiddleware, async (req, res) => {
   try {
+    const { family_member_id } = req.query;
+    const params = [req.userId];
+    const memberFilter = family_member_id ? ' AND m.family_member_id = $2' : '';
+    if (family_member_id) params.push(family_member_id);
+
     // Total de medicamentos ativos
     const medsResult = await pool.query(
-      'SELECT COUNT(*) as total FROM medications WHERE user_id = $1 AND active = TRUE',
-      [req.userId]
+      `SELECT COUNT(*) as total FROM medications m WHERE m.user_id = $1 AND m.active = TRUE${memberFilter.replace('m.','m.')}`,
+      params
     );
 
     // Doses de hoje
     const todayLogsResult = await pool.query(
-      `SELECT
-         COUNT(*) FILTER (WHERE status = 'taken') as taken,
-         COUNT(*) FILTER (WHERE status = 'missed') as missed,
-         COUNT(*) as total
+      `SELECT COUNT(*) FILTER (WHERE status = 'taken') as taken,
+              COUNT(*) FILTER (WHERE status = 'missed') as missed,
+              COUNT(*) as total
        FROM dose_logs dl
        JOIN medications m ON dl.medication_id = m.id
-       WHERE m.user_id = $1
-         AND dl.scheduled_at::date = CURRENT_DATE`,
-      [req.userId]
+       WHERE m.user_id = $1 AND dl.scheduled_at::date = CURRENT_DATE${memberFilter}`,
+      params
     );
 
     // Medicamentos com estoque crítico (< 20% do total)
     const criticalResult = await pool.query(
-      `SELECT COUNT(*) as total FROM medications
-       WHERE user_id = $1 AND active = TRUE
-         AND stock_quantity < (stock_total * 0.2)`,
-      [req.userId]
+      `SELECT COUNT(*) as total FROM medications m
+       WHERE m.user_id = $1 AND m.active = TRUE AND m.stock_quantity < (m.stock_total * 0.2)${memberFilter.replace('m.','m.')}`,
+      params
     );
 
     // Próximas doses
@@ -414,22 +462,19 @@ app.get('/api/dashboard', authMiddleware, async (req, res) => {
       `SELECT ds.scheduled_time, m.name, m.dosage, m.icon
        FROM dose_schedules ds
        JOIN medications m ON ds.medication_id = m.id
-       WHERE m.user_id = $1 AND m.active = TRUE
-         AND ds.scheduled_time > CURRENT_TIME
-       ORDER BY ds.scheduled_time ASC
-       LIMIT 3`,
-      [req.userId]
+       WHERE m.user_id = $1 AND m.active = TRUE AND ds.scheduled_time > CURRENT_TIME${memberFilter}
+       ORDER BY ds.scheduled_time ASC LIMIT 3`,
+      params
     );
 
-    // Prescrições ativas com estoque
+    // Prescrições ativas
     const prescriptionsResult = await pool.query(
       `SELECT m.*, ds.scheduled_time
        FROM medications m
        LEFT JOIN dose_schedules ds ON ds.medication_id = m.id
-       WHERE m.user_id = $1 AND m.active = TRUE
-       ORDER BY m.stock_quantity ASC
-       LIMIT 6`,
-      [req.userId]
+       WHERE m.user_id = $1 AND m.active = TRUE${memberFilter.replace('m.','m.')}
+       ORDER BY m.stock_quantity ASC LIMIT 6`,
+      params
     );
 
     const today = todayLogsResult.rows[0];
@@ -446,7 +491,53 @@ app.get('/api/dashboard', authMiddleware, async (req, res) => {
       prescriptions: prescriptionsResult.rows,
     });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('Erro no dashboard:', err);
+    res.status(500).json({ error: 'Erro ao gerar resumo' });
+  }
+});
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// HEALTH METRICS ROUTES
+// ═══════════════════════════════════════════════════════════════════════════════
+
+// GET /api/health-metrics
+app.get('/api/health-metrics', authMiddleware, async (req, res) => {
+  const { date, family_member_id } = req.query;
+  try {
+    const result = await pool.query(
+      `SELECT * FROM health_metrics 
+       WHERE user_id = $1 AND family_member_id = $2 AND date = $3`,
+      [req.userId, family_member_id || null, date || new Date().toISOString().split('T')[0]]
+    );
+    res.json(result.rows);
+  } catch (err) {
+    console.error('Erro ao buscar métricas:', err);
+    res.status(500).json({ error: 'Erro ao buscar métricas' });
+  }
+});
+
+// POST /api/health-metrics (Upsert)
+app.post('/api/health-metrics', authMiddleware, async (req, res) => {
+  const { family_member_id, metric_type, value, date, unit } = req.body;
+  if (!metric_type || value === undefined) {
+    return res.status(400).json({ error: 'metric_type e value são obrigatórios' });
+  }
+
+  const metricDate = date || new Date().toISOString().split('T')[0];
+
+  try {
+    const result = await pool.query(
+      `INSERT INTO health_metrics (user_id, family_member_id, metric_type, value, unit, date)
+       VALUES ($1, $2, $3, $4, $5, $6)
+       ON CONFLICT (user_id, family_member_id, metric_type, date)
+       DO UPDATE SET value = EXCLUDED.value, updated_at = CURRENT_TIMESTAMP
+       RETURNING *`,
+      [req.userId, family_member_id || null, metric_type, value, unit || '', metricDate]
+    );
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error('Erro ao salvar métrica:', err);
+    res.status(500).json({ error: 'Erro ao salvar métrica' });
   }
 });
 

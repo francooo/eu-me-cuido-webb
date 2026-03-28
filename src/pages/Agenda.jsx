@@ -1,17 +1,29 @@
 import React, { useState, useEffect } from 'react';
 import { schedulesApi, doseLogsApi } from '../services/api';
+import { useAuth } from '../context/AuthContext';
 
 const Agenda = () => {
+  const { user, selectedMember } = useAuth();
   const [schedules, setSchedules] = useState([]);
   const [loading, setLoading] = useState(true);
   const [confirmingId, setConfirmingId] = useState(null);
 
+  const loadAgenda = async () => {
+    try {
+      setLoading(true);
+      const params = selectedMember ? { family_member_id: selectedMember.id } : {};
+      const data = await schedulesApi.list(params);
+      setSchedules(data);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    schedulesApi.list()
-      .then(setSchedules)
-      .catch(console.error)
-      .finally(() => setLoading(false));
-  }, []);
+    if (user) loadAgenda();
+  }, [user, selectedMember]);
 
   const handleConfirm = async (schedule) => {
     setConfirmingId(schedule.id);

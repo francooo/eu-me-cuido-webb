@@ -6,13 +6,14 @@ const AuthContext = createContext(null);
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [selectedMember, setSelectedMember] = useState(null);
 
   useEffect(() => {
-    const token = localStorage.getItem('emc_token');
+    const token = localStorage.getItem('auth_token');
     if (token) {
       authApi.me()
         .then(setUser)
-        .catch(() => localStorage.removeItem('emc_token'))
+        .catch(() => localStorage.removeItem('auth_token'))
         .finally(() => setLoading(false));
     } else {
       setLoading(false);
@@ -21,25 +22,34 @@ export function AuthProvider({ children }) {
 
   const login = async (email, password) => {
     const data = await authApi.login({ email, password });
-    localStorage.setItem('emc_token', data.token);
+    localStorage.setItem('auth_token', data.token);
     setUser(data.user);
     return data.user;
   };
 
   const signup = async (name, email, password) => {
     const data = await authApi.signup({ name, email, password });
-    localStorage.setItem('emc_token', data.token);
+    localStorage.setItem('auth_token', data.token);
     setUser(data.user);
     return data.user;
   };
 
   const logout = () => {
-    localStorage.removeItem('emc_token');
+    localStorage.removeItem('auth_token');
     setUser(null);
+    setSelectedMember(null);
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, signup, logout }}>
+    <AuthContext.Provider value={{ 
+      user, 
+      loading, 
+      selectedMember, 
+      setSelectedMember,
+      login, 
+      signup, 
+      logout 
+    }}>
       {children}
     </AuthContext.Provider>
   );
