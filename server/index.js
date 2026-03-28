@@ -2,7 +2,35 @@ const express = require('express');
 const cors = require('cors');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const multer = require('multer');
+const path = require('path');
+const fs = require('fs');
 require('dotenv').config();
+
+// Configuração do Multer para uploads de avatar
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    const dir = 'uploads/avatars/';
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+    cb(null, dir);
+  },
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, 'avatar-' + uniqueSuffix + path.extname(file.originalname));
+  }
+});
+const upload = multer({
+  storage,
+  limits: { fileSize: 2 * 1024 * 1024 }, // 2MB
+  fileFilter: (req, file, cb) => {
+    const allowed = /jpeg|jpg|png/;
+    const ext = allowed.test(path.extname(file.originalname).toLowerCase());
+    const mime = allowed.test(file.mimetype);
+    if (ext && mime) return cb(null, true);
+    cb(new Error('Apenas imagens JPG/PNG são permitidas'));
+  }
+});
+
 
 const pool = require('./db');
 
@@ -13,6 +41,16 @@ const JWT_SECRET = process.env.JWT_SECRET || 'eumecuido_secret';
 // ─── Middlewares ─────────────────────────────────────────────────────────────
 app.use(cors({ origin: ['http://localhost:5173', 'http://localhost:5174'], credentials: true }));
 app.use(express.json());
+app.use('/uploads', express.static('uploads'));
+
+// Middleware de log para depuração
+app.use((req, res, next) => {
+  if (req.path.startsWith('/api')) {
+    console.log(`[${new Date().toLocaleTimeString()}] ${req.method} ${req.path}`);
+  }
+  next();
+});
+
 
 // ─── Middleware de Autenticação JWT ──────────────────────────────────────────
 function authMiddleware(req, res, next) {
@@ -141,13 +179,17 @@ app.get('/api/family-members', authMiddleware, async (req, res) => {
 });
 
 // POST /api/family-members
-app.post('/api/family-members', authMiddleware, async (req, res) => {
-  const { name, relationship } = req.body;
+app.post('/api/family-members', authMiddleware, upload.single('avatar'), async (req, res) => {
+  const { name, relationship, birth_date, gender } = req.body;
   if (!name) return res.status(400).json({ error: 'Nome é obrigatório' });
+
+  const avatar_url = req.file ? `/uploads/avatars/${req.file.filename}` : null;
+
   try {
     const result = await pool.query(
-      'INSERT INTO family_members (user_id, name, relationship) VALUES ($1, $2, $3) RETURNING *',
-      [req.userId, name, relationship || null]
+      `INSERT INTO family_members (user_id, name, relationship, birth_date, gender, avatar_url)
+       VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`,
+      [req.userId, name, relationship || null, birth_date || null, gender || null, avatar_url]
     );
     res.status(201).json(result.rows[0]);
   } catch (err) {
@@ -199,17 +241,21 @@ app.get('/api/medications', authMiddleware, async (req, res) => {
 // POST /api/medications
 app.post('/api/medications', authMiddleware, async (req, res) => {
   const { name, dosage, frequency, stock_quantity, stock_total, icon, family_member_id, scheduled_time, instructions } = req.body;
+  console.log('--- POST /api/medications ---');
+  console.log('Body:', JSON.stringify(req.body, null, 2));
+
   if (!name) return res.status(400).json({ error: 'Nome do medicamento é obrigatório' });
 
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
 
+    const medType = icon || 'pill';
     const medResult = await client.query(
-      `INSERT INTO medications (user_id, family_member_id, name, dosage, frequency, stock_quantity, stock_total, icon)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *`,
+      `INSERT INTO medications (user_id, family_member_id, name, dosage, frequency, stock_quantity, stock_total, icon, type)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, COALESCE($9, 'pill')) RETURNING *`,
       [req.userId, family_member_id || null, name, dosage || '', frequency || 'daily',
-       stock_quantity || 0, stock_total || 30, icon || 'pill']
+       stock_quantity || 0, stock_total || 30, icon || 'pill', medType]
     );
     const med = medResult.rows[0];
 
@@ -236,8 +282,8 @@ app.put('/api/medications/:id', authMiddleware, async (req, res) => {
   try {
     const result = await pool.query(
       `UPDATE medications SET name=$1, dosage=$2, frequency=$3, stock_quantity=$4,
-       stock_total=$5, icon=$6 WHERE id=$7 AND user_id=$8 RETURNING *`,
-      [name, dosage, frequency, stock_quantity, stock_total, icon, req.params.id, req.userId]
+       stock_total=$5, icon=$6, type=$7 WHERE id=$8 AND user_id=$9 RETURNING *`,
+      [name, dosage, frequency, stock_quantity, stock_total, icon, icon, req.params.id, req.userId]
     );
     if (result.rows.length === 0) return res.status(404).json({ error: 'Medicamento não encontrado' });
     res.json(result.rows[0]);

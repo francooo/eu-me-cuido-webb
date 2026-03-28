@@ -7,13 +7,17 @@ function getToken() {
 
 async function request(path, options = {}) {
   const token = getToken();
+  const isFormData = options.body instanceof FormData;
   const headers = {
-    'Content-Type': 'application/json',
+    ...(isFormData ? {} : { 'Content-Type': 'application/json' }),
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
     ...options.headers,
   };
 
-  const res = await fetch(`${BASE_URL}${path}`, { ...options, headers });
+  const res = await fetch(`${BASE_URL}${path}`, {
+    ...options,
+    headers,
+  });
   const data = await res.json().catch(() => ({}));
 
   if (!res.ok) {
@@ -43,7 +47,7 @@ export const medicationsApi = {
 // ─── Family Members ───────────────────────────────────────────────────────────
 export const familyApi = {
   list: () => request('/family-members'),
-  create: (body) => request('/family-members', { method: 'POST', body: JSON.stringify(body) }),
+  create: (formData) => request('/family-members', { method: 'POST', body: formData }),
   remove: (id) => request(`/family-members/${id}`, { method: 'DELETE' }),
 };
 

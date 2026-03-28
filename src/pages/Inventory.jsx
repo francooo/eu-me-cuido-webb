@@ -37,17 +37,25 @@ const Inventory = () => {
   useEffect(() => { loadData(); }, [selectedMember]);
 
   const openModal = (med = null) => {
+    if (familyMembers.length === 0) {
+      alert('Você precisa cadastrar pelo menos um membro da família (ou seu próprio perfil) antes de adicionar medicamentos.');
+      return;
+    }
+
     if (med) {
       setForm({
         name: med.name, dosage: med.dosage || '',
         frequency: med.frequency || 'daily',
         stock_quantity: med.stock_quantity, stock_total: med.stock_total,
         icon: med.icon || 'pill', scheduled_time: med.next_dose_time?.slice(0, 5) || '',
-        instructions: '', family_member_id: med.family_member_id || '',
+        instructions: med.instructions || '', family_member_id: med.family_member_id || '',
       });
       setEditMed(med);
     } else {
-      setForm({ name: '', dosage: '', frequency: 'daily', stock_quantity: 30, stock_total: 30, icon: 'pill', scheduled_time: '', instructions: '', family_member_id: familyMembers[0]?.id || '' });
+      setForm({ 
+        name: '', dosage: '', frequency: 'daily', stock_quantity: 30, stock_total: 30, icon: 'pill', scheduled_time: '', instructions: '', 
+        family_member_id: familyMembers[0]?.id || '' 
+      });
       setEditMed(null);
     }
     setShowModal(true);

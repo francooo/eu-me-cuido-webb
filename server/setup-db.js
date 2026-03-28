@@ -17,6 +17,9 @@ const migrations = [
   `ALTER TABLE medications ADD COLUMN IF NOT EXISTS family_member_id INT`,
   // Adicionar user_id à family_members se nao existir
   `ALTER TABLE family_members ADD COLUMN IF NOT EXISTS user_id INT REFERENCES users(id) ON DELETE CASCADE`,
+  `ALTER TABLE family_members ADD COLUMN IF NOT EXISTS birth_date DATE`,
+  `ALTER TABLE family_members ADD COLUMN IF NOT EXISTS gender VARCHAR(50)`,
+  `ALTER TABLE family_members ADD COLUMN IF NOT EXISTS avatar_url TEXT`,
   `ALTER TABLE family_members ADD COLUMN IF NOT EXISTS is_self BOOLEAN DEFAULT FALSE`,
   `ALTER TABLE family_members ADD COLUMN IF NOT EXISTS relationship VARCHAR(100)`,
   // Criar nossas tabelas específicas se não existirem
