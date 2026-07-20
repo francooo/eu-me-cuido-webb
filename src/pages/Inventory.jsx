@@ -1,50 +1,34 @@
 import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { medicationsApi, familyApi, aiApi } from '../services/api';
 import { useAuth } from '../context/AuthContext';
+import Modal from '../components/Modal';
 
 // Modal de Insights da IA
 const AiInsightsModal = ({ isOpen, onClose, summary, medName, loading }) => {
-  if (!isOpen) return null;
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-md flex items-center justify-center z-[100] p-4 animate-in fade-in duration-300">
-      <div className="bg-surface-container-lowest rounded-[2.5rem] shadow-2xl w-full max-w-lg p-8 sm:p-10 border border-primary/20 flex flex-col gap-6 scale-95 animate-in zoom-in-95 duration-200">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary shadow-inner">
-              <span className="material-symbols-outlined text-3xl">smart_toy</span>
-            </div>
-            <div>
-              <h3 className="text-2xl font-black text-on-surface tracking-tighter">AI Insight</h3>
-              <p className="text-[11px] uppercase font-bold text-primary tracking-widest mt-1">{medName}</p>
+    <Modal open={isOpen} onClose={onClose} title="AI Insight" subtitle={medName} icon="smart_toy">
+      <div className="bg-primary/5 rounded-3xl p-6 border border-primary/10 min-h-[200px] flex flex-col">
+        {loading ? (
+          <div className="flex-1 flex flex-col items-center justify-center gap-4 py-10">
+            <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+            <p className="text-primary font-bold text-sm animate-pulse tracking-wide">Analisando medicamento...</p>
+          </div>
+        ) : (
+          <div className="prose prose-sm prose-primary max-w-none prose-p:text-on-surface-variant prose-p:leading-relaxed prose-headings:text-on-surface prose-headings:font-black">
+            <div className="text-on-surface-variant whitespace-pre-line leading-relaxed text-sm font-medium">
+              {summary}
             </div>
           </div>
-          <button onClick={onClose} className="w-10 h-10 rounded-full flex items-center justify-center hover:bg-surface-container-high transition-all text-on-surface-variant">
-            <span className="material-symbols-outlined text-2xl">close</span>
-          </button>
-        </div>
-
-        <div className="bg-primary/5 rounded-3xl p-6 border border-primary/10 min-h-[200px] flex flex-col">
-          {loading ? (
-            <div className="flex-1 flex flex-col items-center justify-center gap-4 py-10">
-              <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
-              <p className="text-primary font-bold text-sm animate-pulse tracking-wide">Analisando medicamento...</p>
-            </div>
-          ) : (
-            <div className="prose prose-sm prose-primary max-w-none prose-p:text-on-surface-variant prose-p:leading-relaxed prose-headings:text-on-surface prose-headings:font-black">
-              <div className="text-on-surface-variant whitespace-pre-line leading-relaxed text-sm font-medium">
-                {summary}
-              </div>
-            </div>
-          )}
-        </div>
-
-        {!loading && (
-          <button onClick={onClose} className="w-full py-4 rounded-2xl bg-primary text-on-primary text-[13px] font-black uppercase tracking-widest shadow-xl shadow-primary/20 hover:shadow-2xl hover:-translate-y-0.5 transition-all active:scale-95">
-            Entendido
-          </button>
         )}
       </div>
-    </div>
+
+      {!loading && (
+        <button onClick={onClose} className="w-full py-4 rounded-2xl bg-primary text-on-primary text-[13px] font-black uppercase tracking-widest shadow-xl shadow-primary/20 hover:shadow-2xl hover:-translate-y-0.5 transition-all active:scale-95">
+          Entendido
+        </button>
+      )}
+    </Modal>
   );
 };
 
@@ -52,6 +36,7 @@ const ICONS = ['pill', 'vaccines', 'medication'];
 
 const Inventory = () => {
   const { user, selectedMember: globalMember } = useAuth();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [medications, setMedications] = useState([]);
   const [familyMembers, setFamilyMembers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -129,6 +114,16 @@ const Inventory = () => {
     setShowModal(true);
   };
 
+  // Abre o modal de novo medicamento quando acionado pelo FAB da barra mobile
+  // (NavLink para /inventory?new=true), depois limpa o parâmetro da URL.
+  useEffect(() => {
+    if (searchParams.get('new') === 'true') {
+      openModal();
+      setSearchParams({}, { replace: true });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
+
   const handleSave = async (e) => {
     e.preventDefault();
     setSaving(true);
@@ -172,14 +167,14 @@ const Inventory = () => {
 
   return (
     <>
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
         <div>
           <h2 className="text-3xl font-black text-on-surface tracking-tighter">Inventário</h2>
           <p className="text-xs font-bold text-on-surface-variant uppercase tracking-[0.2em] opacity-50 mt-1">
             {globalMember ? `Medicamentos de ${globalMember.name}` : 'Todos os medicamentos'}
           </p>
         </div>
-        <button onClick={() => openModal()} className="px-6 py-3.5 bg-primary text-on-primary rounded-2xl font-black text-[11px] uppercase tracking-widest shadow-xl shadow-primary/20 hover:shadow-2xl hover:-translate-y-0.5 transition-all active:scale-95 flex items-center gap-2">
+        <button onClick={() => openModal()} className="w-full sm:w-auto px-6 py-3.5 bg-primary text-on-primary rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl shadow-primary/20 hover:shadow-2xl hover:-translate-y-0.5 transition-all active:scale-95 flex items-center justify-center gap-2">
           <span className="material-symbols-outlined text-lg">add</span>
           Novo Medicamento
         </button>
@@ -188,21 +183,21 @@ const Inventory = () => {
       {/* Summary Stats */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
         <div className="bg-surface-container-lowest p-6 rounded-xl flex flex-col gap-2 shadow-sm border border-primary/5">
-          <span className="text-outline text-[10px] font-extrabold uppercase tracking-widest">Total de Itens</span>
+          <span className="text-outline text-xs font-extrabold uppercase tracking-widest">Total de Itens</span>
           <div className="flex items-baseline gap-2">
             <span className="text-4xl font-extrabold text-on-surface">{medications.length}</span>
             <span className="text-primary font-bold text-sm">medicamentos</span>
           </div>
         </div>
         <div className={`${criticalCount > 0 ? 'bg-[#ffdad6]' : 'bg-secondary-container/20'} p-6 rounded-xl flex flex-col gap-2 shadow-sm`}>
-          <span className={`text-[10px] font-extrabold uppercase tracking-widest ${criticalCount > 0 ? 'text-on-error-container' : 'text-on-surface-variant'}`}>Estoque Crítico</span>
+          <span className={`text-xs font-extrabold uppercase tracking-widest ${criticalCount > 0 ? 'text-on-error-container' : 'text-on-surface-variant'}`}>Estoque Crítico</span>
           <div className="flex items-baseline gap-2">
             <span className={`text-4xl font-extrabold ${criticalCount > 0 ? 'text-on-error-container' : 'text-on-surface'}`}>{String(criticalCount).padStart(2, '0')}</span>
             <span className={`font-semibold text-sm ${criticalCount > 0 ? 'text-on-error-container/70' : 'text-on-surface-variant'}`}>{criticalCount > 0 ? 'Requer atenção' : 'Tudo OK'}</span>
           </div>
         </div>
         <div className="bg-primary-fixed p-6 rounded-xl flex flex-col gap-2 shadow-sm">
-          <span className="text-on-primary-fixed-variant text-[10px] font-extrabold uppercase tracking-widest">Próxima Dose</span>
+          <span className="text-on-primary-fixed-variant text-xs font-extrabold uppercase tracking-widest">Próxima Dose</span>
           <div className="flex items-baseline gap-2">
             <span className="text-2xl font-extrabold text-on-primary-fixed-variant">{nextDose?.next_dose_time?.slice(0, 5) || '--:--'}</span>
             <span className="text-on-primary-fixed-variant/70 font-semibold text-sm truncate">{nextDose?.name || 'Sem dose agendada'}</span>
@@ -240,7 +235,7 @@ const Inventory = () => {
               <div className="flex flex-wrap md:flex-nowrap items-center gap-8 flex-[2]">
                 {med.next_dose_time && (
                   <div className="flex flex-col">
-                    <span className="text-[10px] text-outline font-extrabold uppercase tracking-widest mb-1">Próxima Dose</span>
+                    <span className="text-xs text-outline font-extrabold uppercase tracking-widest mb-1">Próxima Dose</span>
                     <div className="flex items-center gap-2 text-primary font-bold">
                       <span className="material-symbols-outlined text-sm">schedule</span>
                       {med.next_dose_time?.slice(0, 5)} (Hoje)
@@ -248,7 +243,7 @@ const Inventory = () => {
                   </div>
                 )}
                 <div className="flex flex-col min-w-[120px]">
-                  <span className="text-[10px] text-outline font-extrabold uppercase tracking-widest mb-1">Estoque Restante</span>
+                  <span className="text-xs text-outline font-extrabold uppercase tracking-widest mb-1">Estoque Restante</span>
                   <div className="flex items-center gap-3">
                     <div className="h-2 w-24 bg-surface-container-highest rounded-full overflow-hidden">
                       <div className={`h-full ${isCritical ? 'bg-error' : 'bg-primary'}`} style={{ width: `${pct}%` }}></div>
@@ -257,7 +252,7 @@ const Inventory = () => {
                   </div>
                 </div>
                 <div className="flex gap-2">
-                  <span className={`px-3 py-1 text-[10px] font-extrabold rounded-full uppercase ${isCritical ? 'bg-error-container text-on-error-container' : 'bg-secondary-container text-on-secondary-container'}`}>
+                  <span className={`px-3 py-1 text-xs font-extrabold rounded-full uppercase ${isCritical ? 'bg-error-container text-on-error-container' : 'bg-secondary-container text-on-secondary-container'}`}>
                     {isCritical ? 'Estoque Baixo' : 'Estoque OK'}
                   </span>
                 </div>
@@ -270,8 +265,8 @@ const Inventory = () => {
                 >
                   <span className="material-symbols-outlined text-xl group-hover:scale-110 transition-transform">smart_toy</span>
                 </button>
-                <button onClick={() => openModal(med)} className="p-2 text-outline hover:text-primary transition-colors"><span className="material-symbols-outlined">edit</span></button>
-                <button onClick={() => handleDelete(med.id)} className="p-2 text-outline hover:text-error transition-colors"><span className="material-symbols-outlined">delete</span></button>
+                <button onClick={() => openModal(med)} className="tap-target inline-flex items-center justify-center p-2 text-outline hover:text-primary transition-colors"><span className="material-symbols-outlined">edit</span></button>
+                <button onClick={() => handleDelete(med.id)} className="tap-target inline-flex items-center justify-center p-2 text-outline hover:text-error transition-colors"><span className="material-symbols-outlined">delete</span></button>
               </div>
             </div>
           );
@@ -288,18 +283,10 @@ const Inventory = () => {
       />
 
       {/* Modal de Adicionar/Editar */}
-      {showModal && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-surface-container-lowest rounded-2xl shadow-2xl w-full max-w-lg p-8">
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-xl font-bold text-on-surface">{editMed ? 'Editar Medicamento' : 'Novo Medicamento'}</h3>
-              <button onClick={() => setShowModal(false)} className="text-outline hover:text-on-surface transition-colors">
-                <span className="material-symbols-outlined">close</span>
-              </button>
-            </div>
+      <Modal open={showModal} onClose={() => setShowModal(false)} title={editMed ? 'Editar Medicamento' : 'Novo Medicamento'}>
             <form onSubmit={handleSave} className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="col-span-2">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="sm:col-span-2">
                   <label className="text-xs font-semibold text-on-surface-variant mb-1 block">Nome do Medicamento *</label>
                   <input required value={form.name} onChange={e => setForm({ ...form, name: e.target.value })}
                     placeholder="Ex: Amoxicilina 500mg"
@@ -345,7 +332,7 @@ const Inventory = () => {
                     <option value="medication">Medicamento</option>
                   </select>
                 </div>
-                <div className="col-span-2">
+                <div className="sm:col-span-2">
                   <label className="text-xs font-semibold text-on-surface-variant mb-1 block">Instruções de Uso (Ex: Tomar em jejum)</label>
                   <textarea value={form.instructions} onChange={e => setForm({ ...form, instructions: e.target.value })}
                     placeholder="Ex: Não mastigar, tomar com bastante água..."
@@ -353,7 +340,7 @@ const Inventory = () => {
                     className="w-full bg-surface-container-highest border-none rounded-xl px-4 py-3 text-on-surface focus:ring-2 focus:ring-primary/40 outline-none resize-none" />
                 </div>
                 {familyMembers.length > 1 && (
-                  <div className="col-span-2">
+                  <div className="sm:col-span-2">
                     <label className="text-xs font-semibold text-on-surface-variant mb-1 block">Para quem?</label>
                     <select value={form.family_member_id} onChange={e => setForm({ ...form, family_member_id: e.target.value })}
                       className="w-full bg-surface-container-highest border-none rounded-xl px-4 py-3 text-on-surface focus:ring-2 focus:ring-primary/40 outline-none">
@@ -373,9 +360,7 @@ const Inventory = () => {
                 </button>
               </div>
             </form>
-          </div>
-        </div>
-      )}
+      </Modal>
     </>
   );
 };

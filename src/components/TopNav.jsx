@@ -17,13 +17,13 @@ const TopNav = ({ title = "Dashboard", subtitle, toggleSidebar }) => {
   const avatarToUse = selectedMember?.avatar_url || null;
 
   return (
-    <header className="sticky top-0 w-full h-16 sm:h-20 glass-nav z-[32] flex items-center justify-between px-4 md:px-12 w-full border-b border-outline-variant/10">
+    <header className="sticky top-0 w-full h-16 sm:h-20 glass-nav z-30 flex items-center justify-between px-4 md:px-12 w-full border-b border-outline-variant/10">
       <div className="flex items-center gap-8 w-full max-w-[1600px] mx-auto">
         <div className="flex items-center gap-4 md:gap-8 flex-1">
           {/* Mobile: Hamburger */}
-          <button 
+          <button
             onClick={toggleSidebar}
-            className="md:hidden w-10 h-10 rounded-full flex items-center justify-center text-on-surface-variant hover:bg-surface-container-high transition-all"
+            className="md:hidden w-11 h-11 rounded-full flex items-center justify-center text-on-surface-variant hover:bg-surface-container-high transition-all"
           >
             <span className="material-symbols-outlined text-2xl">menu</span>
           </button>
@@ -45,11 +45,11 @@ const TopNav = ({ title = "Dashboard", subtitle, toggleSidebar }) => {
 
         <div className="flex items-center gap-3 sm:gap-6">
           <div className="flex items-center gap-1">
-            <button className="p-2 sm:p-3 text-on-surface-variant hover:text-primary transition-all relative group">
+            <button className="tap-target inline-flex items-center justify-center p-2 sm:p-3 text-on-surface-variant hover:text-primary transition-all relative group">
               <span className="material-symbols-outlined text-2xl group-hover:scale-110">notifications</span>
               <span className="absolute top-3 right-3 w-1.5 h-1.5 bg-error rounded-full ring-2 ring-surface"></span>
             </button>
-            <button className="p-2 sm:p-3 text-on-surface-variant hover:text-primary transition-all hidden sm:block group">
+            <button className="tap-target sm:inline-flex items-center justify-center p-2 sm:p-3 text-on-surface-variant hover:text-primary transition-all hidden group">
               <span className="material-symbols-outlined text-2xl group-hover:scale-110">chat_bubble</span>
             </button>
           </div>
@@ -57,7 +57,7 @@ const TopNav = ({ title = "Dashboard", subtitle, toggleSidebar }) => {
           <div className="relative">
             <button
               onClick={() => setShowMenu(!showMenu)}
-              className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl overflow-hidden border-2 border-white shadow-xl hover:scale-105 active:scale-95 transition-all"
+              className="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl overflow-hidden border-2 border-white shadow-xl hover:scale-105 active:scale-95 transition-all"
             >
               {avatarToUse ? (
                 <img src={avatarToUse} alt={nameToUse} className="w-full h-full object-cover" />
@@ -68,11 +68,11 @@ const TopNav = ({ title = "Dashboard", subtitle, toggleSidebar }) => {
             
             {showMenu && (
               <>
-                <div className="fixed inset-0 z-40" onClick={() => setShowMenu(false)}></div>
-                <div className="absolute right-0 top-16 w-64 bg-surface-container-lowest rounded-[2rem] shadow-2xl border border-outline-variant/15 overflow-hidden z-[41] animate-in slide-in-from-top-2 duration-300">
+                <div className="fixed inset-0 z-[55]" onClick={() => setShowMenu(false)}></div>
+                <div className="absolute right-0 top-full mt-3 w-64 bg-surface-container-lowest rounded-[2rem] shadow-2xl border border-outline-variant/15 overflow-hidden z-[55] animate-in slide-in-from-top-2 duration-300">
                   <div className="px-7 py-6 bg-surface-container-low/50">
                     <p className="font-black text-on-surface text-sm tracking-tighter leading-none">{user?.name}</p>
-                    <p className="text-[10px] uppercase font-bold text-primary/60 tracking-widest mt-2">{user?.email}</p>
+                    <p className="text-xs uppercase font-bold text-primary/60 tracking-widest mt-2">{user?.email}</p>
                   </div>
                   <div className="p-3">
                     <button

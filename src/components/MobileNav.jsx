@@ -11,7 +11,7 @@ const MobileNav = () => {
   ];
 
   return (
-    <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-surface/90 backdrop-blur-2xl flex justify-around items-center h-[72px] pb-safe z-50 shadow-[0_-12px_32px_rgba(0,0,0,0.1)] border-t border-outline-variant/10 px-2 lg:px-8">
+    <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-surface/90 backdrop-blur-2xl flex justify-around items-center min-h-[var(--bottom-nav-h)] pb-safe z-30 shadow-[0_-12px_32px_rgba(0,0,0,0.1)] border-t border-outline-variant/10 px-2 lg:px-8">
       {navItems.map((item, index) => {
         // Center space for FAB
         const isMiddle = index === 2;
@@ -47,7 +47,7 @@ const MobileNav = () => {
                       {item.icon}
                     </span>
                   </div>
-                  <span className={`text-[9px] uppercase font-black tracking-widest leading-none ${isActive ? 'opacity-100' : 'opacity-40'}`}>
+                  <span className={`text-[11px] uppercase font-black tracking-wide leading-none ${isActive ? 'opacity-100' : 'opacity-50'}`}>
                     {item.label}
                   </span>
                 </>

@@ -109,7 +109,8 @@ const SideNav = ({ isOpen, setIsOpen }) => {
     { to: '/settings', icon: 'settings', label: 'Configurações' },
   ];
 
-  const sidebarClasses = `h-screen w-72 md:w-64 fixed left-0 top-0 overflow-y-auto bg-surface-container-low flex flex-col py-8 gap-6 z-[40] border-r border-outline-variant/10 shadow-2xl transition-all duration-300 md:translate-x-0 ${
+  // Largura md:w-64 deve permanecer sincronizada com o md:ml-64 em MainLayout.jsx.
+  const sidebarClasses = `h-screen w-72 md:w-64 fixed left-0 top-0 overflow-y-auto bg-surface-container-low flex flex-col py-8 gap-6 z-50 border-r border-outline-variant/10 shadow-2xl transition-all duration-300 md:translate-x-0 ${
     isOpen ? 'translate-x-0' : '-translate-x-full'
   }`;
 
@@ -124,19 +125,19 @@ const SideNav = ({ isOpen, setIsOpen }) => {
       <aside className={sidebarClasses}>
         <div className="flex flex-col gap-1 mb-10 px-8">
           <h1 className="text-2xl font-black text-primary tracking-tighter leading-none">Eu me cuido</h1>
-          <p className="text-[10px] font-black text-outline-variant uppercase tracking-[0.3em]">Health Concierge</p>
+          <p className="text-xs font-black text-outline-variant uppercase tracking-[0.3em]">Health Concierge</p>
         </div>
 
         {/* Global Profile Switcher */}
         <div className="px-8 mb-8 relative group/switcher">
-          <p className="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest opacity-50 mb-4">Sua Rede de Cuidado</p>
+          <p className="text-xs font-bold text-on-surface-variant uppercase tracking-widest opacity-50 mb-4">Sua Rede de Cuidado</p>
           
           <div className="relative">
             {/* Scroll Arrows */}
             {canScrollLeft && (
               <button 
                 onClick={() => scrollFamily('left')}
-                className="absolute left-[-12px] top-1/2 -translate-y-1/2 z-30 w-8 h-8 rounded-full bg-white/90 backdrop-blur-md shadow-lg border border-outline-variant/20 flex items-center justify-center text-primary hover:scale-110 active:scale-90 transition-all"
+                className="absolute left-[-12px] top-1/2 -translate-y-1/2 z-30 w-10 h-10 rounded-full bg-white/90 backdrop-blur-md shadow-lg border border-outline-variant/20 flex items-center justify-center text-primary hover:scale-110 active:scale-90 transition-all"
               >
                 <span className="material-symbols-outlined text-lg">chevron_left</span>
               </button>
@@ -145,7 +146,7 @@ const SideNav = ({ isOpen, setIsOpen }) => {
             {canScrollRight && (
               <button 
                 onClick={() => scrollFamily('right')}
-                className="absolute right-[-12px] top-1/2 -translate-y-1/2 z-30 w-8 h-8 rounded-full bg-white/90 backdrop-blur-md shadow-lg border border-outline-variant/20 flex items-center justify-center text-primary hover:scale-110 active:scale-90 transition-all"
+                className="absolute right-[-12px] top-1/2 -translate-y-1/2 z-30 w-10 h-10 rounded-full bg-white/90 backdrop-blur-md shadow-lg border border-outline-variant/20 flex items-center justify-center text-primary hover:scale-110 active:scale-90 transition-all"
               >
                 <span className="material-symbols-outlined text-lg">chevron_right</span>
               </button>
@@ -228,12 +229,12 @@ const SideNav = ({ isOpen, setIsOpen }) => {
         </nav>
 
         <div className="px-6 mt-auto space-y-2 pt-6 border-t border-outline-variant/10">
-          <button className="w-full premium-gradient text-white font-bold py-4 px-4 rounded-2xl text-[10px] uppercase tracking-[0.2em] mb-4 shadow-xl shadow-primary/20 hover:shadow-2xl hover:-translate-y-1 transition-all active:scale-95">
+          <button className="w-full premium-gradient text-white font-bold py-4 px-4 rounded-2xl text-xs uppercase tracking-[0.2em] mb-4 shadow-xl shadow-primary/20 hover:shadow-2xl hover:-translate-y-1 transition-all active:scale-95">
             Agendar Consulta
           </button>
           <button 
             onClick={handleLogout}
-            className="flex items-center gap-3 px-4 py-2 text-on-surface-variant hover:text-error transition-all text-[10px] font-black uppercase tracking-widest"
+            className="flex items-center gap-3 px-4 py-2 text-on-surface-variant hover:text-error transition-all text-xs font-black uppercase tracking-widest"
           >
             <span className="material-symbols-outlined text-xl">logout</span>
             <span>Sair da Conta</span>
@@ -243,12 +244,12 @@ const SideNav = ({ isOpen, setIsOpen }) => {
 
       {/* Modal Novo Membro */}
       {showModal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-md flex items-center justify-center z-[100] p-4 animate-in fade-in duration-300">
-          <div className="bg-surface-container-lowest rounded-[2.5rem] shadow-2xl w-full max-w-md p-8 sm:p-10 border border-outline-variant/15 flex flex-col gap-6 scale-95 animate-in zoom-in-95 duration-200 overflow-y-auto max-h-[90vh]">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-md flex items-end sm:items-center justify-center z-[60] p-0 sm:p-4 animate-in fade-in duration-300">
+          <div className="bg-surface-container-lowest rounded-t-[2rem] sm:rounded-[2.5rem] shadow-2xl w-full sm:max-w-md p-6 sm:p-10 pb-[calc(1.5rem+env(safe-area-inset-bottom))] sm:pb-10 border border-outline-variant/15 flex flex-col gap-6 animate-in slide-in-from-bottom sm:zoom-in-95 duration-200 overflow-y-auto max-h-[92dvh] sm:max-h-[90vh]">
             <div className="flex items-center justify-between">
               <div>
                 <h3 className="text-2xl font-black text-on-surface tracking-tighter">Novo Membro</h3>
-                <p className="text-[11px] uppercase font-bold text-on-surface-variant tracking-widest mt-1">Sua rede de cuidado</p>
+                <p className="text-xs uppercase font-bold text-on-surface-variant tracking-widest mt-1">Sua rede de cuidado</p>
               </div>
               <button onClick={() => setShowModal(false)} className="w-12 h-12 rounded-full flex items-center justify-center hover:bg-surface-container-high transition-all text-on-surface-variant active:scale-90">
                 <span className="material-symbols-outlined text-2xl">close</span>
@@ -278,12 +279,12 @@ const SideNav = ({ isOpen, setIsOpen }) => {
                   </div>
                 </div>
                 <input id="avatar-input" type="file" accept="image/*" onChange={handleFileChange} className="hidden" />
-                <p className="text-[10px] font-black text-on-surface-variant uppercase tracking-[0.2em]">Foto de Perfil</p>
+                <p className="text-xs font-black text-on-surface-variant uppercase tracking-[0.2em]">Foto de Perfil</p>
               </div>
 
               <div className="space-y-5">
                 <div className="space-y-1.5 px-1">
-                  <label className="text-[10px] font-black text-on-surface-variant uppercase tracking-[0.1em] ml-1">Nome Completo</label>
+                  <label className="text-xs font-black text-on-surface-variant uppercase tracking-[0.1em] ml-1">Nome Completo</label>
                   <input required value={form.name} onChange={e => setForm({ ...form, name: e.target.value })}
                     placeholder="Ex: Dra. Ana Paula"
                     className="w-full bg-surface-container-high/60 border-none rounded-2xl px-6 py-4 text-on-surface font-medium placeholder:opacity-30 focus:ring-4 focus:ring-primary/10 hover:bg-surface-container-high transition-all outline-none" />
@@ -291,12 +292,12 @@ const SideNav = ({ isOpen, setIsOpen }) => {
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-1.5 px-1">
-                    <label className="text-[10px] font-black text-on-surface-variant uppercase tracking-[0.1em] ml-1">Nascimento</label>
+                    <label className="text-xs font-black text-on-surface-variant uppercase tracking-[0.1em] ml-1">Nascimento</label>
                     <input type="date" required value={form.birth_date} onChange={e => setForm({ ...form, birth_date: e.target.value })}
                       className="w-full bg-surface-container-high/60 border-none rounded-2xl px-6 py-4 text-on-surface font-medium focus:ring-4 focus:ring-primary/10 transition-all outline-none" />
                   </div>
                   <div className="space-y-1.5 px-1">
-                    <label className="text-[10px] font-black text-on-surface-variant uppercase tracking-[0.1em] ml-1">Gênero</label>
+                    <label className="text-xs font-black text-on-surface-variant uppercase tracking-[0.1em] ml-1">Gênero</label>
                     <select value={form.gender} onChange={e => setForm({ ...form, gender: e.target.value })}
                       className="w-full bg-surface-container-high/60 border-none rounded-2xl px-6 py-4 text-on-surface font-medium focus:ring-4 focus:ring-primary/10 transition-all outline-none appearance-none">
                       <option value="Masculino">Masculino</option>
@@ -307,7 +308,7 @@ const SideNav = ({ isOpen, setIsOpen }) => {
                 </div>
 
                 <div className="space-y-1.5 px-1">
-                  <label className="text-[10px] font-black text-on-surface-variant uppercase tracking-[0.1em] ml-1">Parentesco</label>
+                  <label className="text-xs font-black text-on-surface-variant uppercase tracking-[0.1em] ml-1">Parentesco</label>
                   <select value={form.relation} onChange={e => setForm({ ...form, relation: e.target.value })}
                     className="w-full bg-surface-container-high/60 border-none rounded-2xl px-6 py-4 text-on-surface font-medium focus:ring-4 focus:ring-primary/10 transition-all outline-none appearance-none">
                     <option value="Cônjuge">Cônjuge</option>

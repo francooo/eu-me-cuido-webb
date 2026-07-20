@@ -59,7 +59,7 @@ const History = () => {
           <div className="flex items-center bg-surface-container-low p-1 rounded-xl">
             {[7, 30].map(d => (
               <button key={d} onClick={() => setDays(d)}
-                className={`px-4 py-2 text-sm font-semibold rounded-lg transition-all ${days === d ? 'text-on-primary-fixed bg-primary-fixed shadow-sm' : 'text-on-surface-variant hover:text-primary'}`}>
+                className={`tap-target px-4 py-2.5 text-sm font-semibold rounded-lg transition-all ${days === d ? 'text-on-primary-fixed bg-primary-fixed shadow-sm' : 'text-on-surface-variant hover:text-primary'}`}>
                 {d} dias
               </button>
             ))}
@@ -118,7 +118,7 @@ const History = () => {
         </div>
 
         <aside className="lg:col-span-4 space-y-8">
-          <div className="bg-primary p-8 rounded-[2rem] text-on-primary relative overflow-hidden group">
+          <div className="bg-primary p-6 sm:p-8 rounded-[2rem] text-on-primary relative overflow-hidden group">
             <div className="absolute -right-8 -top-8 w-32 h-32 bg-primary-container/20 rounded-full blur-2xl group-hover:scale-150 transition-transform duration-700"></div>
             <div className="relative z-10">
               <span className="material-symbols-outlined text-4xl mb-6">description</span>
@@ -148,11 +148,11 @@ const History = () => {
               <div className="grid grid-cols-2 gap-4">
                 <div className="bg-surface-container-lowest p-4 rounded-2xl">
                   <p className="text-xl font-bold text-on-surface">{totalTaken}</p>
-                  <p className="text-[10px] font-bold text-on-surface-variant uppercase">Doses Tomadas</p>
+                  <p className="text-xs font-bold text-on-surface-variant uppercase">Doses Tomadas</p>
                 </div>
                 <div className="bg-surface-container-lowest p-4 rounded-2xl">
                   <p className="text-xl font-bold text-error">{totalMissed}</p>
-                  <p className="text-[10px] font-bold text-on-surface-variant uppercase">Doses Perdidas</p>
+                  <p className="text-xs font-bold text-on-surface-variant uppercase">Doses Perdidas</p>
                 </div>
               </div>
             </div>

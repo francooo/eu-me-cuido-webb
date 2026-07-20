@@ -57,7 +57,7 @@ const Login = () => {
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Email Field */}
         <div className="space-y-2">
-          <label htmlFor="email" className="font-headline text-[11px] font-bold uppercase tracking-[0.15em] text-on-surface-variant ml-1">E-MAIL</label>
+          <label htmlFor="email" className="font-headline text-xs font-bold uppercase tracking-[0.15em] text-on-surface-variant ml-1">E-MAIL</label>
           <div className="relative group">
             <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
               <span className="material-symbols-outlined text-outline group-focus-within:text-primary transition-colors text-lg">mail</span>
@@ -78,8 +78,8 @@ const Login = () => {
         {/* Password Field */}
         <div className="space-y-2">
           <div className="flex justify-between items-center">
-            <label htmlFor="password" className="font-headline text-[11px] font-bold uppercase tracking-[0.15em] text-on-surface-variant ml-1">SENHA</label>
-            <a href="#" className="text-[11px] font-bold uppercase tracking-wider text-primary hover:underline transition-all">ESQUECEU?</a>
+            <label htmlFor="password" className="font-headline text-xs font-bold uppercase tracking-[0.15em] text-on-surface-variant ml-1">SENHA</label>
+            <a href="#" className="text-xs font-bold uppercase tracking-wider text-primary hover:underline transition-all">ESQUECEU?</a>
           </div>
           <div className="relative group">
             <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">

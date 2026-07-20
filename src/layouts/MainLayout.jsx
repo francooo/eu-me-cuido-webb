@@ -31,8 +31,8 @@ const MainLayout = () => {
       
       {/* Overlay for mobile sidebar */}
       {isSidebarOpen && (
-        <div 
-          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[35] md:hidden animate-in fade-in duration-300"
+        <div
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 md:hidden animate-in fade-in duration-300"
           onClick={() => setIsSidebarOpen(false)}
         ></div>
       )}
@@ -44,12 +44,12 @@ const MainLayout = () => {
           toggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)} 
         />
         
-        <main className="flex-1 pt-24 pb-28 md:pb-12 px-4 md:px-8 max-w-7xl mx-auto w-full transition-all duration-300">
+        <main className="flex-1 pt-24 pb-[calc(var(--bottom-nav-h)+2.5rem)] md:pb-12 px-4 md:px-8 max-w-7xl mx-auto w-full transition-all duration-300">
           <Outlet />
         </main>
 
         {/* Global Footer - Hidden on mobile to save space */}
-        <footer className="hidden md:flex w-full py-8 mt-auto justify-between items-center px-8 border-t border-outline-variant/15 bg-surface-container-low text-[10px] font-bold uppercase tracking-widest text-on-surface-variant/40">
+        <footer className="hidden md:flex w-full py-8 mt-auto justify-between items-center px-8 border-t border-outline-variant/15 bg-surface-container-low text-xs font-bold uppercase tracking-widest text-on-surface-variant/40">
           <p>© 2024 Eu me cuido • Gestão de Saúde de Alta Fidelidade</p>
           <div className="flex gap-8">
             <a href="#" className="hover:text-primary transition-colors">Privacidade</a>

@@ -123,7 +123,7 @@ const Dashboard = () => {
               <span className="material-symbols-outlined text-xl">calendar_today</span>
             </div>
             <div>
-              <p className="text-[10px] font-black text-outline uppercase tracking-widest">Hoje</p>
+              <p className="text-xs font-black text-outline uppercase tracking-widest">Hoje</p>
               <p className="text-sm font-bold text-on-surface">{new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: 'long' })}</p>
             </div>
           </div>
@@ -134,7 +134,7 @@ const Dashboard = () => {
       <div className="grid grid-cols-1 md:grid-cols-12 grid-rows-auto gap-6 mt-8">
         
         {/* Medication Summary - Main Bento Piece */}
-        <div className="md:col-span-8 bg-white/60 backdrop-blur-xl p-8 rounded-[2.5rem] border border-outline-variant/15 shadow-2xl shadow-primary/5 flex flex-col md:flex-row gap-10 items-center overflow-hidden relative">
+        <div className="md:col-span-8 bg-white/60 backdrop-blur-xl p-6 sm:p-8 rounded-[2.5rem] border border-outline-variant/15 shadow-2xl shadow-primary/5 flex flex-col md:flex-row gap-10 items-center overflow-hidden relative">
           <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl pointer-events-none"></div>
           
           <div className="relative h-56 w-56 flex-shrink-0 group">
@@ -148,7 +148,7 @@ const Dashboard = () => {
             </svg>
             <div className="absolute inset-0 flex flex-col items-center justify-center transition-transform group-hover:scale-110 duration-500">
               <span className="text-5xl font-black text-on-surface tracking-tighter">{today.progress}%</span>
-              <span className="text-[10px] text-outline font-black uppercase tracking-[0.2em] mt-1">Concluído</span>
+              <span className="text-xs text-outline font-black uppercase tracking-[0.2em] mt-1">Concluído</span>
             </div>
           </div>
 
@@ -166,14 +166,14 @@ const Dashboard = () => {
             
             <div className="grid grid-cols-2 gap-4">
               <div className="bg-primary/5 p-6 rounded-3xl border border-primary/10 hover:bg-primary/10 transition-colors">
-                <span className="text-[10px] font-black text-primary uppercase tracking-widest block mb-2">Concluídas</span>
+                <span className="text-xs font-black text-primary uppercase tracking-widest block mb-2">Concluídas</span>
                 <div className="flex items-end gap-1">
                   <p className="text-4xl font-black text-on-surface">{String(today.taken).padStart(2, '0')}</p>
                   <p className="text-sm font-bold text-outline mb-1.5">/ {today.total}</p>
                 </div>
               </div>
               <div className="bg-error/5 p-6 rounded-3xl border border-error/10 hover:bg-error/10 transition-colors">
-                <span className="text-[10px] font-black text-error uppercase tracking-widest block mb-2">Perdidas</span>
+                <span className="text-xs font-black text-error uppercase tracking-widest block mb-2">Perdidas</span>
                 <p className="text-4xl font-black text-on-surface">{String(today.missed).padStart(2, '0')}</p>
               </div>
             </div>
@@ -181,7 +181,7 @@ const Dashboard = () => {
         </div>
 
         {/* Upcoming Timeline - Bento Piece 2 */}
-        <div className="md:col-span-4 bg-surface-container-high/40 backdrop-blur-md p-8 rounded-[2.5rem] border border-outline-variant/15 relative overflow-hidden flex flex-col">
+        <div className="md:col-span-4 bg-surface-container-high/40 backdrop-blur-md p-6 sm:p-8 rounded-[2.5rem] border border-outline-variant/15 relative overflow-hidden flex flex-col">
           <div className="relative z-10 flex flex-col h-full">
             <h4 className="text-xl font-black text-on-surface tracking-tight mb-8 flex items-center justify-between">
               Próximas Doses
@@ -197,7 +197,7 @@ const Dashboard = () => {
                       {i < data.next_doses.length - 1 && <div className="w-0.5 h-16 bg-gradient-to-b from-primary/30 to-transparent mt-2"></div>}
                     </div>
                     <div className="space-y-1">
-                      <p className="text-[10px] font-black text-primary uppercase tracking-[0.2em]">{dose.scheduled_time?.slice(0, 5)} — Hoje</p>
+                      <p className="text-xs font-black text-primary uppercase tracking-[0.2em]">{dose.scheduled_time?.slice(0, 5)} — Hoje</p>
                       <p className="font-black text-on-surface text-lg tracking-tight">{dose.name}</p>
                       <div className="flex items-center gap-4 text-xs font-bold text-on-surface-variant/60">
                          <span className="flex items-center gap-1"><span className="material-symbols-outlined text-sm">medication</span> {dose.dosage}</span>
@@ -230,14 +230,14 @@ const Dashboard = () => {
               <span className="material-symbols-outlined text-2xl font-black">water_drop</span>
             </div>
             <div className="text-right">
-              <p className="text-[10px] font-black text-outline uppercase tracking-widest">Hidratação</p>
+              <p className="text-xs font-black text-outline uppercase tracking-widest">Hidratação</p>
               <p className="text-2xl font-black text-on-surface">{metrics.water}ml</p>
             </div>
           </div>
           <div className="space-y-4">
              <div className="w-full bg-blue-500/5 h-12 rounded-2xl overflow-hidden relative">
                 <div className="absolute inset-y-0 left-0 bg-blue-500/20 transition-all duration-1000" style={{ width: `${Math.min((metrics.water / 2500) * 100, 100)}%` }}></div>
-                <div className="absolute inset-x-0 bottom-0 text-[10px] font-black text-blue-500/50 uppercase text-center pb-1">Meta: 2.5L</div>
+                <div className="absolute inset-x-0 bottom-0 text-xs font-black text-blue-500/50 uppercase text-center pb-1">Meta: 2.5L</div>
              </div>
              <div className="flex gap-2">
                 <button onClick={() => updateMetric('water', metrics.water + 250)} className="flex-1 py-3 bg-blue-500 text-white rounded-xl text-xs font-black hover:bg-blue-600 transition-all active:scale-90 shadow-lg shadow-blue-500/20">
@@ -257,14 +257,14 @@ const Dashboard = () => {
               <span className="material-symbols-outlined text-2xl font-black">directions_run</span>
             </div>
             <div className="text-right">
-              <p className="text-[10px] font-black text-outline uppercase tracking-widest">Atividade</p>
+              <p className="text-xs font-black text-outline uppercase tracking-widest">Atividade</p>
               <p className="text-2xl font-black text-on-surface">{metrics.steps.toLocaleString()}</p>
             </div>
           </div>
           <div className="space-y-4">
              <div className="w-full bg-orange-500/5 h-12 rounded-2xl overflow-hidden relative">
                 <div className="absolute inset-y-0 left-0 bg-orange-500/20 transition-all duration-1000" style={{ width: `${Math.min((metrics.steps / 10000) * 100, 100)}%` }}></div>
-                <div className="absolute inset-x-0 bottom-0 text-[10px] font-black text-orange-500/50 uppercase text-center pb-1">Meta: 10k</div>
+                <div className="absolute inset-x-0 bottom-0 text-xs font-black text-orange-500/50 uppercase text-center pb-1">Meta: 10k</div>
              </div>
              <div className="flex gap-2">
                 <button onClick={() => updateMetric('steps', metrics.steps + 500)} className="flex-1 py-3 bg-orange-500 text-white rounded-xl text-xs font-black hover:bg-orange-600 transition-all active:scale-90 shadow-lg shadow-orange-500/20 text-center">
@@ -281,20 +281,20 @@ const Dashboard = () => {
               <span className="material-symbols-outlined text-2xl font-black">bedtime</span>
             </div>
             <div className="text-right">
-              <p className="text-[10px] font-black text-outline uppercase tracking-widest">Repouso</p>
+              <p className="text-xs font-black text-outline uppercase tracking-widest">Repouso</p>
               <p className="text-2xl font-black text-on-surface">{metrics.sleep}h</p>
             </div>
           </div>
           <div className="space-y-4">
              <div className="w-full bg-indigo-500/5 h-12 rounded-2xl overflow-hidden relative">
                 <div className="absolute inset-y-0 left-0 bg-indigo-500/20 transition-all duration-1000" style={{ width: `${Math.min((metrics.sleep / 8) * 100, 100)}%` }}></div>
-                <div className="absolute inset-x-0 bottom-0 text-[10px] font-black text-indigo-500/50 uppercase text-center pb-1">Meta: 8h</div>
+                <div className="absolute inset-x-0 bottom-0 text-xs font-black text-indigo-500/50 uppercase text-center pb-1">Meta: 8h</div>
              </div>
              <div className="grid grid-cols-2 gap-2">
-                <button onClick={() => updateMetric('sleep', Math.min(24, metrics.sleep + 0.5))} className="py-3 bg-indigo-500 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-indigo-600 transition-all active:scale-90 shadow-lg shadow-indigo-500/20">
+                <button onClick={() => updateMetric('sleep', Math.min(24, metrics.sleep + 0.5))} className="py-3 bg-indigo-500 text-white rounded-xl text-xs font-black uppercase tracking-widest hover:bg-indigo-600 transition-all active:scale-90 shadow-lg shadow-indigo-500/20">
                   +0.5h
                 </button>
-                <button onClick={() => updateMetric('sleep', Math.max(0, metrics.sleep - 0.5))} className="py-3 bg-surface-container-high text-on-surface-variant rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-error/10 hover:text-error transition-all active:scale-90">
+                <button onClick={() => updateMetric('sleep', Math.max(0, metrics.sleep - 0.5))} className="py-3 bg-surface-container-high text-on-surface-variant rounded-xl text-xs font-black uppercase tracking-widest hover:bg-error/10 hover:text-error transition-all active:scale-90">
                   -0.5h
                 </button>
              </div>
@@ -308,7 +308,7 @@ const Dashboard = () => {
               <div className="w-10 h-10 rounded-full bg-error/20 flex items-center justify-center text-error group-hover:scale-110 transition-transform">
                 <span className="material-symbols-outlined text-xl font-black">warning</span>
               </div>
-              <p className="text-[10px] font-black text-error uppercase tracking-[0.2em]">Reposição</p>
+              <p className="text-xs font-black text-error uppercase tracking-[0.2em]">Reposição</p>
             </div>
             <h4 className="text-xl font-black text-on-surface tracking-tight">Estoque Crítico</h4>
             <div className="flex items-end gap-2">
@@ -316,7 +316,7 @@ const Dashboard = () => {
               <p className="text-xs font-bold text-outline-variant mb-1.5 uppercase tracking-widest tracking-tighter">Itens para revisar</p>
             </div>
           </div>
-          <Link to="/inventory" className="mt-6 flex items-center justify-center gap-2 text-[10px] font-black text-error uppercase tracking-widest group-hover:translate-x-2 transition-transform">
+          <Link to="/inventory" className="mt-6 flex items-center justify-center gap-2 text-xs font-black text-error uppercase tracking-widest group-hover:translate-x-2 transition-transform">
             Resolver Agora <span className="material-symbols-outlined text-xs">arrow_forward</span>
           </Link>
         </div>
@@ -328,7 +328,7 @@ const Dashboard = () => {
               <h4 className="text-3xl font-black text-on-surface tracking-tighter">Prescrições Ativas</h4>
               <p className="text-xs font-bold text-outline uppercase tracking-widest">Seu tratamento em curso</p>
             </div>
-            <Link to="/inventory" className="px-6 py-3 bg-surface-container-low hover:bg-surface-container-high rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all">
+            <Link to="/inventory" className="px-6 py-3 bg-surface-container-low hover:bg-surface-container-high rounded-2xl text-xs font-black uppercase tracking-widest transition-all">
               Gerenciar Tudo
             </Link>
           </div>
@@ -339,13 +339,13 @@ const Dashboard = () => {
                 const pct = med.stock_total > 0 ? Math.round((med.stock_quantity / med.stock_total) * 100) : 0;
                 const isCritical = pct < 20;
                 return (
-                  <div key={med.id} className="bg-white/40 backdrop-blur-xl p-8 rounded-[2.5rem] border border-outline-variant/15 hover:shadow-2xl transition-all group relative overflow-hidden">
+                  <div key={med.id} className="bg-white/40 backdrop-blur-xl p-6 sm:p-8 rounded-[2.5rem] border border-outline-variant/15 hover:shadow-2xl transition-all group relative overflow-hidden">
                     {isCritical && <div className="absolute top-0 right-0 w-32 h-32 bg-error/5 rounded-full -translate-y-1/2 translate-x-1/2 blur-2xl"></div>}
                     <div className="flex justify-between items-start mb-6">
                       <div className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-transform group-hover:rotate-6 ${isCritical ? 'bg-error/10 text-error shadow-xl shadow-error/10' : 'bg-primary/10 text-primary shadow-xl shadow-primary/10'}`}>
                         <span className="material-symbols-outlined text-3xl font-black">{iconMap[med.icon] || 'pill'}</span>
                       </div>
-                      <span className={`px-4 py-1.5 text-[9px] font-black rounded-full uppercase tracking-widest shadow-sm ${isCritical ? 'bg-error text-on-error' : 'bg-primary/20 text-primary'}`}>
+                      <span className={`px-4 py-1.5 text-xs font-black rounded-full uppercase tracking-widest shadow-sm ${isCritical ? 'bg-error text-on-error' : 'bg-primary/20 text-primary'}`}>
                         {isCritical ? 'Baixo Estoque' : 'Estável'}
                       </span>
                     </div>
@@ -355,7 +355,7 @@ const Dashboard = () => {
                         <p className="text-xs font-bold text-on-surface-variant/60 uppercase tracking-widest">{med.dosage} • {med.frequency}</p>
                       </div>
                       <div className="space-y-2 pt-2">
-                        <div className="flex justify-between text-[10px] font-black uppercase tracking-widest mb-1 items-end">
+                        <div className="flex justify-between text-xs font-black uppercase tracking-widest mb-1 items-end">
                            <span className="text-outline">Disponível</span>
                            <span className={isCritical ? 'text-error animate-pulse' : 'text-primary'}>{med.stock_quantity} doses</span>
                         </div>

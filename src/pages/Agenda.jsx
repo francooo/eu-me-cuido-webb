@@ -75,7 +75,7 @@ const Agenda = () => {
               <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z" />
             </svg>
             <div className="flex flex-col">
-              <span className="text-[10px] font-bold text-whatsapp uppercase leading-none mb-1">Lembretes WhatsApp</span>
+              <span className="text-xs font-bold text-whatsapp uppercase leading-none mb-1">Lembretes WhatsApp</span>
               <span className="text-xs font-semibold text-on-surface">Em breve</span>
             </div>
           </div>
@@ -96,10 +96,10 @@ const Agenda = () => {
       ) : (
         <>
           {/* Weekly Overview Strip */}
-          <div className="grid grid-cols-7 gap-2">
+          <div className="grid grid-cols-7 gap-1 sm:gap-2">
             {weekDays.map((day, idx) => (
-              <div key={idx} className={`flex flex-col items-center gap-2 p-3 rounded-xl transition-all ${idx === today ? 'bg-primary text-on-primary' : 'bg-surface-container-low text-on-surface-variant'}`}>
-                <span className="text-[10px] font-bold uppercase">{day}</span>
+              <div key={idx} className={`flex flex-col items-center gap-2 p-2 sm:p-3 rounded-xl transition-all ${idx === today ? 'bg-primary text-on-primary' : 'bg-surface-container-low text-on-surface-variant'}`}>
+                <span className="text-xs font-bold uppercase">{day}</span>
                 <span className={`text-lg font-extrabold ${idx === today ? 'text-on-primary' : 'text-on-surface'}`}>
                   {new Date(now.getFullYear(), now.getMonth(), now.getDate() - today + idx).getDate()}
                 </span>
@@ -125,7 +125,7 @@ const Agenda = () => {
                           <span className="material-symbols-outlined text-3xl">{s.icon || 'pill'}</span>
                         </div>
                         <div className="flex-1">
-                          {isNext && <span className="text-[10px] font-bold text-on-primary-container uppercase flex items-center gap-1 mb-1"><span className="w-2 h-2 rounded-full bg-white animate-pulse"></span> Próximo: Agora</span>}
+                          {isNext && <span className="text-xs font-bold text-on-primary-container uppercase flex items-center gap-1 mb-1"><span className="w-2 h-2 rounded-full bg-white animate-pulse"></span> Próximo: Agora</span>}
                           <h4 className={`font-bold text-lg ${isNext ? 'text-on-primary-container' : 'text-on-surface'}`}>{s.medication_name}</h4>
                           <p className={`text-sm ${isNext ? 'text-on-primary-container/80' : 'text-on-surface-variant'}`}>{s.scheduled_time?.slice(0, 5)} • {s.dosage}</p>
                           {s.instructions && <p className={`text-xs mt-1 ${isNext ? 'text-on-primary-container/70' : 'text-outline'}`}>{s.instructions}</p>}
@@ -133,7 +133,7 @@ const Agenda = () => {
                         <button
                           onClick={() => handleConfirm(s)}
                           disabled={confirmingId === s.id}
-                          className={`px-6 py-2.5 rounded-full font-bold text-sm transition-all ${isNext ? 'bg-white text-primary hover:bg-white/90' : 'bg-primary text-on-primary hover:shadow-md'} disabled:opacity-50`}>
+                          className={`w-full sm:w-auto px-6 py-2.5 rounded-full font-bold text-sm transition-all ${isNext ? 'bg-white text-primary hover:bg-white/90' : 'bg-primary text-on-primary hover:shadow-md'} disabled:opacity-50`}>
                           {confirmingId === s.id ? 'Registrando...' : 'Confirmar'}
                         </button>
                       </div>
@@ -155,7 +155,7 @@ const Agenda = () => {
                       </div>
                       <div className="flex-1">
                         <h4 className="font-bold text-on-secondary-container text-sm">{s.medication_name}</h4>
-                        <p className="text-[11px] text-on-secondary-container/80">{s.scheduled_time?.slice(0, 5)} • {s.dosage}</p>
+                        <p className="text-xs text-on-secondary-container/80">{s.scheduled_time?.slice(0, 5)} • {s.dosage}</p>
                       </div>
                       <span className="material-symbols-outlined text-whatsapp" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
                     </div>
@@ -191,7 +191,7 @@ const Agenda = () => {
               <div>
                 <p className="text-xs font-medium uppercase tracking-wider mb-1">Próxima Dose</p>
                 <h4 className="text-2xl font-bold">{nextUp?.scheduled_time?.slice(0, 5) || '--:--'}</h4>
-                <p className="text-[11px] mt-1 opacity-70">{nextUp?.medication_name || 'Nenhuma pendente'}</p>
+                <p className="text-xs mt-1 opacity-70">{nextUp?.medication_name || 'Nenhuma pendente'}</p>
               </div>
             </div>
 
@@ -200,7 +200,7 @@ const Agenda = () => {
               <div>
                 <p className="text-xs font-medium uppercase tracking-wider mb-1 text-on-surface-variant">Total de Doses</p>
                 <h4 className="text-2xl font-bold text-on-surface">{schedules.length} hoje</h4>
-                <p className="text-[11px] mt-1 text-on-surface-variant">{upcoming.length} pendentes</p>
+                <p className="text-xs mt-1 text-on-surface-variant">{upcoming.length} pendentes</p>
               </div>
             </div>
           </div>

@@ -37,7 +37,7 @@ const Signup = () => {
         <div className="w-14 h-14 bg-gradient-to-br from-primary to-primary-container rounded-full flex items-center justify-center mb-4 shadow-lg shadow-primary/20">
           <span className="material-symbols-outlined text-on-primary text-3xl">clinical_notes</span>
         </div>
-        <h2 className="text-xl font-bold tracking-tight text-on-surface uppercase tracking-widest text-[10px] mb-2 opacity-60">
+        <h2 className="text-xs font-bold text-on-surface uppercase tracking-widest mb-2 opacity-60">
           Eu me cuido
         </h2>
         <h1 className="text-3xl font-bold text-on-surface tracking-tight text-center">
@@ -158,11 +158,11 @@ const Signup = () => {
       <div className="mt-8 flex justify-center gap-8 opacity-40 grayscale hover:grayscale-0 transition-all duration-500">
         <div className="flex items-center gap-1.5">
           <span className="material-symbols-outlined text-sm">shield</span>
-          <span className="text-[10px] font-bold uppercase tracking-tighter">Conformidade HIPAA</span>
+          <span className="text-xs font-bold uppercase tracking-tighter">Conformidade HIPAA</span>
         </div>
         <div className="flex items-center gap-1.5">
           <span className="material-symbols-outlined text-sm">lock</span>
-          <span className="text-[10px] font-bold uppercase tracking-tighter">Criptografia AES-256</span>
+          <span className="text-xs font-bold uppercase tracking-tighter">Criptografia AES-256</span>
         </div>
       </div>
     </div>

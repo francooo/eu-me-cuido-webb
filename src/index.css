@@ -3,6 +3,12 @@
 @tailwind utilities;
 
 @layer base {
+  /* Altura da barra de navegação inferior (mobile). Centralizada aqui porque
+     entra no cálculo de safe-area/clearance em MobileNav, Settings e MainLayout. */
+  :root {
+    --bottom-nav-h: 72px;
+  }
+
   .material-symbols-outlined {
     font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
   }
@@ -17,6 +23,21 @@
 }
 
 @layer utilities {
+  /* Safe-area (notch / home indicator do iOS). Requer viewport-fit=cover no
+     index.html — sem ele env(safe-area-inset-*) resolve para 0. */
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  .pt-safe {
+    padding-top: env(safe-area-inset-top, 0px);
+  }
+
+  /* Alvo de toque mínimo de 44px (recomendação WCAG/Apple/Material). */
+  .tap-target {
+    min-height: 2.75rem;
+    min-width: 2.75rem;
+  }
+
   .scrollbar-hide {
     -ms-overflow-style: none;  /* IE and Edge */
     scrollbar-width: none;  /* Firefox */
